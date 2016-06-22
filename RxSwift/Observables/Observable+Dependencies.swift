@@ -8,11 +8,11 @@
 
 import Foundation
 
-protocol ObservableUsable: class {
+public protocol ObservableUsable: class {
     func subscribeAny(on: (event: Event<Any>) -> Void) -> Disposable
 }
 
-extension ObservableUsable {
+public extension ObservableUsable {
     private func unwrap(any: Any) -> Any? {
         let mirror = Mirror(reflecting: any)
         if mirror.displayStyle != .Optional {
@@ -25,7 +25,7 @@ extension ObservableUsable {
         
     }
     
-    var observableSources: [ObservableUsable] {
+    public var observableSources: [ObservableUsable] {
         var result: [ObservableUsable] = []
         let mirror = Mirror(reflecting: self)
         for case let (label?, value) in mirror.children {
@@ -39,17 +39,17 @@ extension ObservableUsable {
         return result
     }
     
-    var observableSourcesTree: [ObservableUsable] {
+    public var observableSourcesTree: [ObservableUsable] {
         return [self] + observableSources.flatMap { $0.observableSourcesTree }
     }
     
-    var leafSources: [ObservableUsable] {
+    public var leafSources: [ObservableUsable] {
         return observableSourcesTree.filter { $0.observableSources.isEmpty }
     }
 }
 
 extension Observable: ObservableUsable {
-    func subscribeAny(on: (event: Event<Any>) -> Void) -> Disposable {
+    public func subscribeAny(on: (event: Event<Any>) -> Void) -> Disposable {
         return subscribe {
             switch $0 {
             case .Next(let element):
