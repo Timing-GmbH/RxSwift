@@ -37,7 +37,9 @@ extension NSControl {
                 }
                 
                 return observer
-            }.takeUntil(self.rx_deallocated)
+            }
+                .shareReplayLatestWhileConnected()
+                .takeUntil(self.rx_deallocated)
         }
         
         return ControlEvent(events: source)
