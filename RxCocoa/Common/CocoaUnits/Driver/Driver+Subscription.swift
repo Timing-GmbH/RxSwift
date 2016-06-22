@@ -40,6 +40,7 @@ extension DriverConvertibleType {
     @warn_unused_result(message="http://git.io/rxs.ud")
     public func drive(variable: Variable<E>) -> Disposable {
         MainScheduler.ensureExecutingOnScheduler(driverErrorMessage)
+        variable.source = self.asObservable()
         return drive(onNext: { e in
             variable.value = e
         })
