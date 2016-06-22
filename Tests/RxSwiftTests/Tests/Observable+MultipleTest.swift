@@ -2558,6 +2558,150 @@ extension ObservableMultipleTest {
     }
 }
 
+// MARK: combine latest with dependencies
+extension ObservableMultipleTest {
+    func testCombineLatest_DebounceDependenciesSameSource() {
+        var nEvents = 0
+        
+        let source = Variable<Int>(0)
+        let observable = Observable
+            .combineLatest(source.asObservable(), source.asObservable(), debounceDependencies: true) { $0 + $1 }
+        _ = observable.subscribeNext { n in
+            nEvents += 1
+        }
+        source.value = 1
+        source.value = 2
+        
+        XCTAssertEqual(nEvents, 3)
+    }
+    
+    func testCombineLatest_DebounceDependenciesSameSourceIndirect() {
+        var nEvents = 0
+        
+        let source = Variable<Int>(0)
+        let observable = Observable
+            .combineLatest(source.asObservable().map { $0 }, source.asObservable().map { $0 + 1 },
+                           debounceDependencies: true) { $0 + $1 }
+        _ = observable.subscribeNext { n in
+            nEvents += 1
+        }
+        source.value = 1
+        source.value = 2
+        
+        XCTAssertEqual(nEvents, 3)
+    }
+    
+    func testCombineLatest_DebounceDependenciesSameSourceViaVariable() {
+        var nEvents = 0
+        
+        let disposeBag = DisposeBag()
+        
+        let a = Variable<Int>(0)
+        let b = Variable<Int>(0)
+        a.asObservable()
+            .bindTo(b)
+            .addDisposableTo(disposeBag)
+        let observable = Observable
+            .combineLatest(a.asObservable(), b.asObservable(), debounceDependencies: true) { $0 + $1 }
+        _ = observable.subscribeNext { n in
+            nEvents += 1
+        }
+        a.value = 1
+        a.value = 2
+        
+        XCTAssertEqual(nEvents, 3)
+    }
+    
+    func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndMap() {
+        var nEvents = 0
+        
+        let a = Variable<Int>(0)
+        let b = Variable<Int>(0)
+        _ = a.asObservable()
+            .map { 2 * $0 }
+            .bindTo(b)
+        let observable = Observable
+            .combineLatest(a.asObservable(), b.asObservable(), debounceDependencies: true) { $0 + $1 }
+        _ = observable.subscribeNext { n in
+            nEvents += 1
+        }
+        a.value = 1
+        a.value = 2
+        
+        XCTAssertEqual(nEvents, 3)
+    }
+    
+    func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndDoubleMap() {
+        var nEvents = 0
+        
+        let a = Variable<Int>(0)
+        let b = Variable<Int>(0)
+        let c = a.asObservable().map { $0 }
+        let d = b.asObservable().map { $0 + 1 }
+        _ = a.asObservable()
+            .map { 2 * $0 }
+            .bindTo(b)
+        let observable = Observable.combineLatest(c, d, debounceDependencies: true) { $0 + $1 }
+        _ = observable.subscribeNext { n in
+            print(n)
+            nEvents += 1
+        }
+        a.value = 1
+        a.value = 2
+        
+        XCTAssertEqual(nEvents, 3)
+    }
+    
+    func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndDoubleMap2() {
+        var nEvents = 0
+        
+        let a = Variable<Int>(0)
+        let b = Variable<Int>(0)
+        _ = a.asObservable()
+            .map { 2 * $0 }
+            .bindTo(b)
+        let observable = Observable.combineLatest(a.asObservable().map { $0 }, b.asObservable().map { $0 + 1 },
+                                                  debounceDependencies: true) { $0 + $1 }
+        _ = observable.subscribeNext { n in
+            print(n)
+            nEvents += 1
+        }
+        a.value = 1
+        a.value = 2
+        
+        XCTAssertEqual(nEvents, 3)
+    }
+    
+    func testCombineLatest_DebounceDependenciesSameSourceVeryIndirect() {
+        var nEvents = 0
+        
+        let a = Variable<Int>(0)
+        let b = Variable<Int>(0)
+        let c = Variable<Int>(0)
+        
+        let d = Observable.combineLatest(a.asObservable(), b.asObservable()) { $0 + $1 }
+        let e = Observable.combineLatest(b.asObservable(), c.asObservable()) { $0 + $1 }
+        let f = Observable.combineLatest(c.asObservable(), a.asObservable()) { $0 + $1 }
+        
+        let g = Observable.combineLatest(d.asObservable(), e.asObservable(), debounceDependencies: true) { $0 + $1 }
+        let h = Observable.combineLatest(e.asObservable(), f.asObservable(), debounceDependencies: true) { $0 + $1 }
+        let i = Observable.combineLatest(f.asObservable(), d.asObservable(), debounceDependencies: true) { $0 + $1 }
+        
+        let observable = Observable.combineLatest(g, h, i, debounceDependencies: true) { $0 + $1 + $2 }
+        _ = observable.subscribeNext { n in
+            nEvents += 1
+        }
+        
+        a.value = 1
+        b.value = 2
+        c.value = 3
+        b.value = 4
+        a.value = 5
+        
+        XCTAssertEqual(nEvents, 6)
+    }
+}
+
 // MARK: takeUntil
 extension ObservableMultipleTest {
     func testTakeUntil_Preempt_SomeData_Next() {

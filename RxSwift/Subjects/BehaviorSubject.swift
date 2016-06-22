@@ -31,6 +31,7 @@ public final class BehaviorSubject<Element>
     }
     
     let _lock = NSRecursiveLock()
+    var _source: Observable<Element>?
     
     // state
     private var _disposed = false

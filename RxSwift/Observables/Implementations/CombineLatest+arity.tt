@@ -23,11 +23,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<<%= (Array(1...i).map { "O\($0): ObservableType" }).joinWithSeparator(", ") %>>
-        (<%= (Array(1...i).map { "source\($0): O\($0)" }).joinWithSeparator(", _ ") %>, resultSelector: (<%= (Array(1...i).map { "O\($0).E" }).joinWithSeparator(", ") %>) throws -> E)
+        (<%= (Array(1...i).map { "source\($0): O\($0)" }).joinWithSeparator(", _ ") %>, debounceDependencies: Bool = false, resultSelector: (<%= (Array(1...i).map { "O\($0).E" }).joinWithSeparator(", ") %>) throws -> E)
             -> Observable<E> {
         return CombineLatest<%= i %>(
             <%= (Array(1...i).map { "source\($0): source\($0).asObservable()" }).joinWithSeparator(", ") %>,
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -47,7 +47,21 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joinWithSep
         super.init(arity: <%= i %>, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
 <%= (Array(1...i).map {
 "        let subscription\($0) = SingleAssignmentDisposable()"
 }).joinWithSeparator("\n") %>
@@ -60,7 +74,7 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joinWithSep
 "         subscription\($0).disposable = _parent._source\($0).subscribe(observer\($0))"
 }).joinWithSeparator("\n") %>
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
 <%= (Array(1...i).map { "                subscription\($0)" }).joinWithSeparator(",\n") %>
         ])
     }
@@ -77,19 +91,22 @@ class CombineLatest<%= i %><<%= (Array(1...i).map { "E\($0)" }).joinWithSeparato
 "    let _source\($0): Observable<E\($0)>"
 }).joinWithSeparator("\n") %>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(<%= (Array(1...i).map { "source\($0): Observable<E\($0)>" }).joinWithSeparator(", ") %>, resultSelector: ResultSelector) {
+    init(<%= (Array(1...i).map { "source\($0): Observable<E\($0)>" }).joinWithSeparator(", ") %>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
 <%= (Array(1...i).map {
 "        _source\($0) = source\($0)"
 }).joinWithSeparator("\n")  %>
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink<%= i %>_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }

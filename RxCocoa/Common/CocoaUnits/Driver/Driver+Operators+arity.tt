@@ -44,10 +44,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<<%= (Array(1...i).map { "O\($0): DriverConvertibleType" }).joinWithSeparator(", ") %>>
-        (<%= (Array(1...i).map { "source\($0): O\($0)" }).joinWithSeparator(", _ ") %>, resultSelector: (<%= (Array(1...i).map { "O\($0).E" }).joinWithSeparator(", ") %>) throws -> E)
+        (<%= (Array(1...i).map { "source\($0): O\($0)" }).joinWithSeparator(", _ ") %>, debounceDependencies: Bool = false, resultSelector: (<%= (Array(1...i).map { "O\($0).E" }).joinWithSeparator(", ") %>) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 <%= (Array(1...i).map { "source\($0).asDriver().asObservable()" }).joinWithSeparator(", ") %>,
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 

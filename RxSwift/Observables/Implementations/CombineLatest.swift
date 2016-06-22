@@ -12,6 +12,7 @@ protocol CombineLatestProtocol : class {
     func next(index: Int)
     func fail(error: ErrorType)
     func done(index: Int)
+    func erase(index: Int)
 }
 
 class CombineLatestSink<O: ObserverType>
@@ -90,12 +91,23 @@ class CombineLatestSink<O: ObserverType>
             dispose()
         }
     }
+    
+    func erase(index: Int) {
+        if _isDone[index] {
+            return
+        }
+        
+        if _hasValue[index] {
+            _hasValue[index] = false
+            _numberOfValues -= 1
+        }
+    }
 }
 
 class CombineLatestObserver<ElementType>
     : ObserverType
     , LockOwnerType
-    , SynchronizedOnType {
+, SynchronizedOnType {
     typealias Element = ElementType
     typealias ValueSetter = (Element) -> Void
     
@@ -117,7 +129,7 @@ class CombineLatestObserver<ElementType>
     func on(event: Event<Element>) {
         synchronizedOn(event)
     }
-
+    
     func _synchronized_on(event: Event<Element>) {
         switch event {
         case .Next(let value):
@@ -129,6 +141,37 @@ class CombineLatestObserver<ElementType>
         case .Completed:
             _this.dispose()
             _parent.done(_index)
+        }
+    }
+}
+
+class CombineLatestEraseObserver
+    : ObserverType
+    , LockOwnerType
+, SynchronizedOnType {
+    private let _parent: CombineLatestProtocol
+    
+    let _lock: NSRecursiveLock
+    private let _index: Int
+    private let _this: Disposable
+    
+    init(lock: NSRecursiveLock, parent: CombineLatestProtocol, index: Int, this: Disposable) {
+        _lock = lock
+        _parent = parent
+        _index = index
+        _this = this
+    }
+    
+    func on(event: Event<Any>) {
+        synchronizedOn(event)
+    }
+    
+    func _synchronized_on(event: Event<Any>) {
+        switch event {
+        case .Next(_):
+            _parent.erase(_index)
+        case .Error, .Completed:
+            _this.dispose()
         }
     }
 }

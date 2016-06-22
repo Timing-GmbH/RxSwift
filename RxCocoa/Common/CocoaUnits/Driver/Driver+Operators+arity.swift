@@ -45,10 +45,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType>
-        (source1: O1, _ source2: O2, resultSelector: (O1.E, O2.E) throws -> E)
+        (source1: O1, _ source2: O2, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 
@@ -89,10 +90,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType, O3: DriverConvertibleType>
-        (source1: O1, _ source2: O2, _ source3: O3, resultSelector: (O1.E, O2.E, O3.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(), source3.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 
@@ -133,10 +135,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType, O3: DriverConvertibleType, O4: DriverConvertibleType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, resultSelector: (O1.E, O2.E, O3.E, O4.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(), source3.asDriver().asObservable(), source4.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 
@@ -177,10 +180,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType, O3: DriverConvertibleType, O4: DriverConvertibleType, O5: DriverConvertibleType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(), source3.asDriver().asObservable(), source4.asDriver().asObservable(), source5.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 
@@ -221,10 +225,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType, O3: DriverConvertibleType, O4: DriverConvertibleType, O5: DriverConvertibleType, O6: DriverConvertibleType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(), source3.asDriver().asObservable(), source4.asDriver().asObservable(), source5.asDriver().asObservable(), source6.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 
@@ -265,10 +270,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType, O3: DriverConvertibleType, O4: DriverConvertibleType, O5: DriverConvertibleType, O6: DriverConvertibleType, O7: DriverConvertibleType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(), source3.asDriver().asObservable(), source4.asDriver().asObservable(), source5.asDriver().asObservable(), source6.asDriver().asObservable(), source7.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 
@@ -309,10 +315,11 @@ extension Driver {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: DriverConvertibleType, O2: DriverConvertibleType, O3: DriverConvertibleType, O4: DriverConvertibleType, O5: DriverConvertibleType, O6: DriverConvertibleType, O7: DriverConvertibleType, O8: DriverConvertibleType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E, O8.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E, O8.E) throws -> E)
         -> Driver<E> {
         let source = Observable.combineLatest(
                 source1.asDriver().asObservable(), source2.asDriver().asObservable(), source3.asDriver().asObservable(), source4.asDriver().asObservable(), source5.asDriver().asObservable(), source6.asDriver().asObservable(), source7.asDriver().asObservable(), source8.asDriver().asObservable(),
+                debounceDependencies: debounceDependencies,
                 resultSelector: resultSelector
             )
 

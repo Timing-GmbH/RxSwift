@@ -38,6 +38,7 @@ extension ObservableType {
     */
     @warn_unused_result(message="http://git.io/rxs.ud")
     public func bindTo(variable: Variable<E>) -> Disposable {
+        variable.source = self.asObservable()
         return subscribe { e in
             switch e {
             case let .Next(element):

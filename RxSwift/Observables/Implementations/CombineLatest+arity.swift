@@ -24,11 +24,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType>
-        (source1: O1, _ source2: O2, resultSelector: (O1.E, O2.E) throws -> E)
+        (source1: O1, _ source2: O2, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E) throws -> E)
             -> Observable<E> {
         return CombineLatest2(
             source1: source1.asObservable(), source2: source2.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -47,7 +47,21 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
         super.init(arity: 2, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
 
@@ -57,7 +71,7 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
          subscription1.disposable = _parent._source1.subscribe(observer1)
          subscription2.disposable = _parent._source2.subscribe(observer2)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2
         ])
@@ -74,18 +88,21 @@ class CombineLatest2<E1, E2, R> : Producer<R> {
     let _source1: Observable<E1>
     let _source2: Observable<E2>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink2_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
@@ -105,11 +122,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType>
-        (source1: O1, _ source2: O2, _ source3: O3, resultSelector: (O1.E, O2.E, O3.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E) throws -> E)
             -> Observable<E> {
         return CombineLatest3(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -129,7 +146,21 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
         super.init(arity: 3, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
         let subscription3 = SingleAssignmentDisposable()
@@ -142,7 +173,7 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
          subscription2.disposable = _parent._source2.subscribe(observer2)
          subscription3.disposable = _parent._source3.subscribe(observer3)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2,
                 subscription3
@@ -161,19 +192,22 @@ class CombineLatest3<E1, E2, E3, R> : Producer<R> {
     let _source2: Observable<E2>
     let _source3: Observable<E3>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
         _source3 = source3
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink3_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
@@ -193,11 +227,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, resultSelector: (O1.E, O2.E, O3.E, O4.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E) throws -> E)
             -> Observable<E> {
         return CombineLatest4(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -218,7 +252,21 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
         super.init(arity: 4, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
         let subscription3 = SingleAssignmentDisposable()
@@ -234,7 +282,7 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
          subscription3.disposable = _parent._source3.subscribe(observer3)
          subscription4.disposable = _parent._source4.subscribe(observer4)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2,
                 subscription3,
@@ -255,20 +303,23 @@ class CombineLatest4<E1, E2, E3, E4, R> : Producer<R> {
     let _source3: Observable<E3>
     let _source4: Observable<E4>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
         _source3 = source3
         _source4 = source4
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink4_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
@@ -288,11 +339,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E) throws -> E)
             -> Observable<E> {
         return CombineLatest5(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -314,7 +365,21 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
         super.init(arity: 5, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
         let subscription3 = SingleAssignmentDisposable()
@@ -333,7 +398,7 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
          subscription4.disposable = _parent._source4.subscribe(observer4)
          subscription5.disposable = _parent._source5.subscribe(observer5)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2,
                 subscription3,
@@ -356,21 +421,24 @@ class CombineLatest5<E1, E2, E3, E4, E5, R> : Producer<R> {
     let _source4: Observable<E4>
     let _source5: Observable<E5>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
         _source3 = source3
         _source4 = source4
         _source5 = source5
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink5_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
@@ -390,11 +458,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E) throws -> E)
             -> Observable<E> {
         return CombineLatest6(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -417,7 +485,21 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
         super.init(arity: 6, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
         let subscription3 = SingleAssignmentDisposable()
@@ -439,7 +521,7 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
          subscription5.disposable = _parent._source5.subscribe(observer5)
          subscription6.disposable = _parent._source6.subscribe(observer6)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2,
                 subscription3,
@@ -464,9 +546,11 @@ class CombineLatest6<E1, E2, E3, E4, E5, E6, R> : Producer<R> {
     let _source5: Observable<E5>
     let _source6: Observable<E6>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, source6: Observable<E6>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, source6: Observable<E6>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
         _source3 = source3
@@ -474,12 +558,13 @@ class CombineLatest6<E1, E2, E3, E4, E5, E6, R> : Producer<R> {
         _source5 = source5
         _source6 = source6
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink6_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
@@ -499,11 +584,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType, O7: ObservableType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E) throws -> E)
             -> Observable<E> {
         return CombineLatest7(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(), source7: source7.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -527,7 +612,21 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
         super.init(arity: 7, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
         let subscription3 = SingleAssignmentDisposable()
@@ -552,7 +651,7 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
          subscription6.disposable = _parent._source6.subscribe(observer6)
          subscription7.disposable = _parent._source7.subscribe(observer7)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2,
                 subscription3,
@@ -579,9 +678,11 @@ class CombineLatest7<E1, E2, E3, E4, E5, E6, E7, R> : Producer<R> {
     let _source6: Observable<E6>
     let _source7: Observable<E7>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, source6: Observable<E6>, source7: Observable<E7>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, source6: Observable<E6>, source7: Observable<E7>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
         _source3 = source3
@@ -590,12 +691,13 @@ class CombineLatest7<E1, E2, E3, E4, E5, E6, E7, R> : Producer<R> {
         _source6 = source6
         _source7 = source7
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink7_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
@@ -615,11 +717,11 @@ extension Observable {
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType, O7: ObservableType, O8: ObservableType>
-        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E, O8.E) throws -> E)
+        (source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, debounceDependencies: Bool = false, resultSelector: (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E, O8.E) throws -> E)
             -> Observable<E> {
         return CombineLatest8(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(), source7: source7.asObservable(), source8: source8.asObservable(),
-            resultSelector: resultSelector
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
         )
     }
 }
@@ -644,7 +746,21 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
         super.init(arity: 8, observer: observer)
     }
 
-    func run() -> Disposable {
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerate() {
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    disposables.append(subscription)
+                }
+            }
+        }
+
         let subscription1 = SingleAssignmentDisposable()
         let subscription2 = SingleAssignmentDisposable()
         let subscription3 = SingleAssignmentDisposable()
@@ -672,7 +788,7 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
          subscription7.disposable = _parent._source7.subscribe(observer7)
          subscription8.disposable = _parent._source8.subscribe(observer8)
 
-        return CompositeDisposable(disposables: [
+        return CompositeDisposable(disposables: disposables + [
                 subscription1,
                 subscription2,
                 subscription3,
@@ -701,9 +817,11 @@ class CombineLatest8<E1, E2, E3, E4, E5, E6, E7, E8, R> : Producer<R> {
     let _source7: Observable<E7>
     let _source8: Observable<E8>
 
+    let _debounceDependencies: Bool
     let _resultSelector: ResultSelector
 
-    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, source6: Observable<E6>, source7: Observable<E7>, source8: Observable<E8>, resultSelector: ResultSelector) {
+    init(source1: Observable<E1>, source2: Observable<E2>, source3: Observable<E3>, source4: Observable<E4>, source5: Observable<E5>, source6: Observable<E6>, source7: Observable<E7>, source8: Observable<E8>,
+         debounceDependencies: Bool, resultSelector: ResultSelector) {
         _source1 = source1
         _source2 = source2
         _source3 = source3
@@ -713,12 +831,13 @@ class CombineLatest8<E1, E2, E3, E4, E5, E6, E7, E8, R> : Producer<R> {
         _source7 = source7
         _source8 = source8
 
+        _debounceDependencies = debounceDependencies
         _resultSelector = resultSelector
     }
 
     override func run<O: ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestSink8_(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }
