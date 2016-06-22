@@ -2575,6 +2575,7 @@ extension ObservableMultipleTest {
         XCTAssertEqual(nEvents, 3)
     }
     
+    //! TODO: Test treatAsLeaf().
     func testCombineLatest_DebounceDependenciesSameSourceIndirect() {
         var nEvents = 0
         

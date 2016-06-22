@@ -62,3 +62,23 @@ extension Observable: ObservableUsable {
         }
     }
 }
+
+class Leaf<SourceType>: Producer<SourceType> {
+    // This must not be called _source as the whole point of this class is to disguise the observable's "real" source.
+    private let _src: Observable<SourceType>
+    
+    init(source: Observable<SourceType>) {
+        _src = source
+    }
+    
+    override func run<O: ObserverType where O.E == SourceType>(observer: O) -> Disposable {
+        return _src.subscribe(observer)
+    }
+}
+
+extension ObservableType {
+    @warn_unused_result(message="http://git.io/rxs.uo")
+    public func treatAsLeaf() -> Observable<E> {
+        return Leaf(source: self.asObservable())
+    }
+}

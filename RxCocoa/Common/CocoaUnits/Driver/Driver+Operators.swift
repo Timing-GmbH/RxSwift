@@ -27,6 +27,11 @@ extension DriverConvertibleType {
             .map(selector)
         return Driver<R>(source)
     }
+    
+    @warn_unused_result(message="http://git.io/rxs.uo")
+    public func treatAsLeaf() -> Driver<E> {
+        return Driver(self.asObservable().treatAsLeaf())
+    }
 }
 
 // MARK: filter
