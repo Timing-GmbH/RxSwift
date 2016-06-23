@@ -70,9 +70,15 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joinWithSep
 "        let observer\($0) = CombineLatestObserver(lock: _lock, parent: self, index: \($0 - 1), setLatestValue: { (e: E\($0)) -> Void in self._latestElement\($0) = e }, this: subscription\($0))"
 }).joinWithSeparator("\n") %>
 
+        if debounceDependencies {
 <%= (Array(1...i).map {
-"         subscription\($0).disposable = _parent._source\($0).subscribe(observer\($0))"
+"            subscription\($0).disposable = _parent._source\($0).observeOn(MainScheduler.instance).subscribe(observer\($0))"
 }).joinWithSeparator("\n") %>
+        } else {
+<%= (Array(1...i).map {
+"            subscription\($0).disposable = _parent._source\($0).subscribe(observer\($0))"
+}).joinWithSeparator("\n") %>
+        }
 
         return CompositeDisposable(disposables: disposables + [
 <%= (Array(1...i).map { "                subscription\($0)" }).joinWithSeparator(",\n") %>

@@ -2560,19 +2560,36 @@ extension ObservableMultipleTest {
 
 // MARK: combine latest with dependencies
 extension ObservableMultipleTest {
+    func runRunLoop() {
+        for _ in 0 ..< 10 {
+            let currentRunLoop = CFRunLoopGetCurrent()
+            dispatch_async(dispatch_get_main_queue()) {
+                CFRunLoopStop(currentRunLoop)
+            }
+            
+            CFRunLoopWakeUp(currentRunLoop)
+            CFRunLoopRun()
+        }
+    }
+    
     func testCombineLatest_DebounceDependenciesSameSource() {
         var nEvents = 0
         
         let source = Variable<Int>(0)
+        var finalValue = -1
         let observable = Observable
             .combineLatest(source.asObservable(), source.asObservable(), debounceDependencies: true) { $0 + $1 }
         _ = observable.subscribeNext { n in
+            finalValue = n
             nEvents += 1
         }
+        
         source.value = 1
         source.value = 2
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 4)
     }
     
     //! TODO: Test treatAsLeaf().
@@ -2580,16 +2597,21 @@ extension ObservableMultipleTest {
         var nEvents = 0
         
         let source = Variable<Int>(0)
+        var finalValue = -1
         let observable = Observable
             .combineLatest(source.asObservable().map { $0 }, source.asObservable().map { $0 + 1 },
                            debounceDependencies: true) { $0 + $1 }
         _ = observable.subscribeNext { n in
+            finalValue = n
             nEvents += 1
         }
+        
         source.value = 1
         source.value = 2
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 5)
     }
     
     func testCombineLatest_DebounceDependenciesSameSourceViaVariable() {
@@ -2599,18 +2621,29 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        a.asObservable()
+        //! TODO: Consider creating a custom scheduler which _always_ schedules rather than sometimes executing
+        //        immediately. This would let us avoid the observeOn() calls here. 
+        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        aObs
             .bindTo(b)
             .addDisposableTo(disposeBag)
+        var finalValue = -1
         let observable = Observable
-            .combineLatest(a.asObservable(), b.asObservable(), debounceDependencies: true) { $0 + $1 }
+            .combineLatest(aObs, b.asObservable(), debounceDependencies: true) { $0 + $1 }
         _ = observable.subscribeNext { n in
+            finalValue = n
             nEvents += 1
         }
+        
+        runRunLoop()
         a.value = 1
+        runRunLoop()
         a.value = 2
+        runRunLoop()
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 4)
     }
     
     func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndMap() {
@@ -2618,18 +2651,26 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        _ = a.asObservable()
+        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        _ = aObs
             .map { 2 * $0 }
             .bindTo(b)
+        var finalValue = -1
         let observable = Observable
-            .combineLatest(a.asObservable(), b.asObservable(), debounceDependencies: true) { $0 + $1 }
+            .combineLatest(aObs, b.asObservable(), debounceDependencies: true) { $0 + $1 }
         _ = observable.subscribeNext { n in
+            finalValue = n
             nEvents += 1
         }
+        
+        runRunLoop()
         a.value = 1
+        runRunLoop()
         a.value = 2
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 6)
     }
     
     func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndDoubleMap() {
@@ -2637,20 +2678,27 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        let c = a.asObservable().map { $0 }
+        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        let c = aObs.map { $0 }
         let d = b.asObservable().map { $0 + 1 }
-        _ = a.asObservable()
+        _ = aObs
             .map { 2 * $0 }
             .bindTo(b)
+        var finalValue = -1
         let observable = Observable.combineLatest(c, d, debounceDependencies: true) { $0 + $1 }
         _ = observable.subscribeNext { n in
-            print(n)
+            finalValue = n
             nEvents += 1
         }
+        
+        runRunLoop()
         a.value = 1
+        runRunLoop()
         a.value = 2
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 7)
     }
     
     func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndDoubleMap2() {
@@ -2658,19 +2706,27 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        _ = a.asObservable()
+        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        _ = aObs
             .map { 2 * $0 }
             .bindTo(b)
-        let observable = Observable.combineLatest(a.asObservable().map { $0 }, b.asObservable().map { $0 + 1 },
+        var finalValue = -1
+        let observable = Observable.combineLatest(aObs.map { $0 }, b.asObservable().map { $0 + 1 },
                                                   debounceDependencies: true) { $0 + $1 }
         _ = observable.subscribeNext { n in
             print(n)
+            finalValue = n
             nEvents += 1
         }
+        
+        runRunLoop()
         a.value = 1
+        runRunLoop()
         a.value = 2
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 7)
     }
     
     func testCombineLatest_DebounceDependenciesSameSourceVeryIndirect() {
@@ -2679,10 +2735,13 @@ extension ObservableMultipleTest {
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
         let c = Variable<Int>(0)
+        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        let bObs = b.asObservable().observeOn(MainScheduler.instance)
+        let cObs = c.asObservable().observeOn(MainScheduler.instance)
         
-        let d = Observable.combineLatest(a.asObservable(), b.asObservable()) { $0 + $1 }
-        let e = Observable.combineLatest(b.asObservable(), c.asObservable()) { $0 + $1 }
-        let f = Observable.combineLatest(c.asObservable(), a.asObservable()) { $0 + $1 }
+        let d = Observable.combineLatest(aObs, bObs) { $0 + $1 }
+        let e = Observable.combineLatest(bObs, cObs) { $0 + $1 }
+        let f = Observable.combineLatest(cObs, aObs) { $0 + $1 }
         
         let g = Observable.combineLatest(d.asObservable(), e.asObservable(), debounceDependencies: true) { $0 + $1 }
         let h = Observable.combineLatest(e.asObservable(), f.asObservable(), debounceDependencies: true) { $0 + $1 }
@@ -2693,11 +2752,17 @@ extension ObservableMultipleTest {
             nEvents += 1
         }
         
+        runRunLoop()
         a.value = 1
+        runRunLoop()
         b.value = 2
+        runRunLoop()
         c.value = 3
+        runRunLoop()
         b.value = 4
+        runRunLoop()
         a.value = 5
+        runRunLoop()
         
         XCTAssertEqual(nEvents, 6)
     }
