@@ -12,19 +12,19 @@ public protocol ObservableUsable: class {
     func subscribeAny(on: (event: Event<Any>) -> Void) -> Disposable
 }
 
-public extension ObservableUsable {
-    private func unwrap(any: Any) -> Any? {
-        let mirror = Mirror(reflecting: any)
-        if mirror.displayStyle != .Optional {
-            return any
-        }
-        
-        if mirror.children.count == 0 { return nil }
-        let (_, some) = mirror.children.first!
-        return some
-        
+private func unwrap(any: Any) -> Any? {
+    let mirror = Mirror(reflecting: any)
+    if mirror.displayStyle != .Optional {
+        return any
     }
     
+    if mirror.children.count == 0 { return nil }
+    let (_, some) = mirror.children.first!
+    return some
+    
+}
+
+public extension ObservableUsable {
     public var observableSources: [ObservableUsable] {
         var result: [ObservableUsable] = []
         let mirror = Mirror(reflecting: self)
