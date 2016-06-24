@@ -69,8 +69,11 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
         let observer2 = CombineLatestObserver(lock: _lock, parent: self, index: 1, setLatestValue: { (e: E2) -> Void in self._latestElement2 = e }, this: subscription2)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)
@@ -175,9 +178,12 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
         let observer3 = CombineLatestObserver(lock: _lock, parent: self, index: 2, setLatestValue: { (e: E3) -> Void in self._latestElement3 = e }, this: subscription3)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(MainScheduler.instance).subscribe(observer3)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)
@@ -289,10 +295,13 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
         let observer4 = CombineLatestObserver(lock: _lock, parent: self, index: 3, setLatestValue: { (e: E4) -> Void in self._latestElement4 = e }, this: subscription4)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(MainScheduler.instance).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(MainScheduler.instance).subscribe(observer4)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
+            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)
@@ -411,11 +420,14 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
         let observer5 = CombineLatestObserver(lock: _lock, parent: self, index: 4, setLatestValue: { (e: E5) -> Void in self._latestElement5 = e }, this: subscription5)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(MainScheduler.instance).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(MainScheduler.instance).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(MainScheduler.instance).subscribe(observer5)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
+            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
+            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)
@@ -541,12 +553,15 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
         let observer6 = CombineLatestObserver(lock: _lock, parent: self, index: 5, setLatestValue: { (e: E6) -> Void in self._latestElement6 = e }, this: subscription6)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(MainScheduler.instance).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(MainScheduler.instance).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(MainScheduler.instance).subscribe(observer5)
-            subscription6.disposable = _parent._source6.observeOn(MainScheduler.instance).subscribe(observer6)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
+            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
+            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
+            subscription6.disposable = _parent._source6.observeOn(mainScheduler).subscribe(observer6)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)
@@ -679,13 +694,16 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
         let observer7 = CombineLatestObserver(lock: _lock, parent: self, index: 6, setLatestValue: { (e: E7) -> Void in self._latestElement7 = e }, this: subscription7)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(MainScheduler.instance).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(MainScheduler.instance).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(MainScheduler.instance).subscribe(observer5)
-            subscription6.disposable = _parent._source6.observeOn(MainScheduler.instance).subscribe(observer6)
-            subscription7.disposable = _parent._source7.observeOn(MainScheduler.instance).subscribe(observer7)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
+            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
+            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
+            subscription6.disposable = _parent._source6.observeOn(mainScheduler).subscribe(observer6)
+            subscription7.disposable = _parent._source7.observeOn(mainScheduler).subscribe(observer7)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)
@@ -825,14 +843,17 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
         let observer8 = CombineLatestObserver(lock: _lock, parent: self, index: 7, setLatestValue: { (e: E8) -> Void in self._latestElement8 = e }, this: subscription8)
 
         if debounceDependencies {
-            subscription1.disposable = _parent._source1.observeOn(MainScheduler.instance).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(MainScheduler.instance).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(MainScheduler.instance).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(MainScheduler.instance).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(MainScheduler.instance).subscribe(observer5)
-            subscription6.disposable = _parent._source6.observeOn(MainScheduler.instance).subscribe(observer6)
-            subscription7.disposable = _parent._source7.observeOn(MainScheduler.instance).subscribe(observer7)
-            subscription8.disposable = _parent._source8.observeOn(MainScheduler.instance).subscribe(observer8)
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
+            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
+            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
+            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
+            subscription6.disposable = _parent._source6.observeOn(mainScheduler).subscribe(observer6)
+            subscription7.disposable = _parent._source7.observeOn(mainScheduler).subscribe(observer7)
+            subscription8.disposable = _parent._source8.observeOn(mainScheduler).subscribe(observer8)
         } else {
             subscription1.disposable = _parent._source1.subscribe(observer1)
             subscription2.disposable = _parent._source2.subscribe(observer2)

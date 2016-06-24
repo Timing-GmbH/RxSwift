@@ -71,8 +71,11 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joinWithSep
 }).joinWithSeparator("\n") %>
 
         if debounceDependencies {
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
 <%= (Array(1...i).map {
-"            subscription\($0).disposable = _parent._source\($0).observeOn(MainScheduler.instance).subscribe(observer\($0))"
+"            subscription\($0).disposable = _parent._source\($0).observeOn(mainScheduler).subscribe(observer\($0))"
 }).joinWithSeparator("\n") %>
         } else {
 <%= (Array(1...i).map {

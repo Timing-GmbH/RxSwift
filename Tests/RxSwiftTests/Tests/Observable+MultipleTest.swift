@@ -2584,7 +2584,9 @@ extension ObservableMultipleTest {
             nEvents += 1
         }
         
+        runRunLoop()
         source.value = 1
+        runRunLoop()
         source.value = 2
         runRunLoop()
         
@@ -2606,7 +2608,9 @@ extension ObservableMultipleTest {
             nEvents += 1
         }
         
+        runRunLoop()
         source.value = 1
+        runRunLoop()
         source.value = 2
         runRunLoop()
         
@@ -2621,9 +2625,7 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        //! TODO: Consider creating a custom scheduler which _always_ schedules rather than sometimes executing
-        //        immediately. This would let us avoid the observeOn() calls here. 
-        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        let aObs = a.asObservable()
         aObs
             .bindTo(b)
             .addDisposableTo(disposeBag)
@@ -2640,7 +2642,6 @@ extension ObservableMultipleTest {
         runRunLoop()
         a.value = 2
         runRunLoop()
-        runRunLoop()
         
         XCTAssertEqual(nEvents, 3)
         XCTAssertEqual(finalValue, 4)
@@ -2651,7 +2652,7 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        let aObs = a.asObservable()
         _ = aObs
             .map { 2 * $0 }
             .bindTo(b)
@@ -2678,7 +2679,7 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        let aObs = a.asObservable()
         let c = aObs.map { $0 }
         let d = b.asObservable().map { $0 + 1 }
         _ = aObs
@@ -2706,7 +2707,7 @@ extension ObservableMultipleTest {
         
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
-        let aObs = a.asObservable().observeOn(MainScheduler.instance)
+        let aObs = a.asObservable()
         _ = aObs
             .map { 2 * $0 }
             .bindTo(b)
@@ -2735,9 +2736,9 @@ extension ObservableMultipleTest {
         let a = Variable<Int>(0)
         let b = Variable<Int>(0)
         let c = Variable<Int>(0)
-        let aObs = a.asObservable().observeOn(MainScheduler.instance)
-        let bObs = b.asObservable().observeOn(MainScheduler.instance)
-        let cObs = c.asObservable().observeOn(MainScheduler.instance)
+        let aObs = a.asObservable()
+        let bObs = b.asObservable()
+        let cObs = c.asObservable()
         
         let d = Observable.combineLatest(aObs, bObs) { $0 + $1 }
         let e = Observable.combineLatest(bObs, cObs) { $0 + $1 }
