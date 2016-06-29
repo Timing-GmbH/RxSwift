@@ -28,7 +28,26 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "C83509931C38742C0027C24C"
+               BuildableName = "AllTests-OSX.xctest"
+               BlueprintName = "AllTests-OSX"
+               ReferencedContainer = "container:Rx.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "C809396F1B8A71840088E94D"
+            BuildableName = "RxCocoa.framework"
+            BlueprintName = "RxCocoa-OSX"
+            ReferencedContainer = "container:Rx.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
