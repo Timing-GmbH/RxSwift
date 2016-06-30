@@ -419,8 +419,8 @@ extension CollectionType where Generator.Element : DriverConvertibleType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
-    public func combineLatest<R>(resultSelector: [Generator.Element.E] throws -> R) -> Driver<R> {
-        let source = self.map { $0.asDriver().asObservable() }.combineLatest(resultSelector)
+    public func combineLatest<R>(debounceDependencies: Bool = false, resultSelector: [Generator.Element.E] throws -> R) -> Driver<R> {
+        let source = self.map { $0.asDriver().asObservable() }.combineLatest(debounceDependencies: debounceDependencies, resultSelector: resultSelector)
         return Driver<R>(source)
     }
 }

@@ -21,8 +21,8 @@ extension CollectionType where Generator.Element : ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     @warn_unused_result(message="http://git.io/rxs.uo")
-    public func combineLatest<R>(resultSelector: [Generator.Element.E] throws -> R) -> Observable<R> {
-        return CombineLatestCollectionType(sources: self, resultSelector: resultSelector)
+    public func combineLatest<R>(debounceDependencies debounceDependencies: Bool = false, resultSelector: [Generator.Element.E] throws -> R) -> Observable<R> {
+        return CombineLatestCollectionType(sources: self, resultSelector: resultSelector, debounceDependencies: debounceDependencies)
     }
 }
 

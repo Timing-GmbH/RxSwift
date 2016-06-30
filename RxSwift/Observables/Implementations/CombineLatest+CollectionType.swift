@@ -23,6 +23,7 @@ class CombineLatestCollectionTypeSink<C: CollectionType, R, O: ObserverType wher
     var _isDone: [Bool]
     var _numberOfDone = 0
     var _subscriptions: [SingleAssignmentDisposable]
+    var _eraseSubscriptions: [Disposable]
     
     init(parent: Parent, observer: O) {
         _parent = parent
@@ -34,6 +35,8 @@ class CombineLatestCollectionTypeSink<C: CollectionType, R, O: ObserverType wher
         for _ in 0 ..< parent._count {
             _subscriptions.append(SingleAssignmentDisposable())
         }
+        
+        _eraseSubscriptions = (0 ..< parent._count).map { _ in NopDisposable() }
         
         super.init(observer: observer)
     }
@@ -83,24 +86,56 @@ class CombineLatestCollectionTypeSink<C: CollectionType, R, O: ObserverType wher
                 }
                 else {
                     _subscriptions[atIndex].dispose()
+                    _eraseSubscriptions[atIndex].dispose()
                 }
             }
         // }
     }
     
-    func run() -> Disposable {
+    func erase(index: Int) {
+        _lock.lock(); defer { _lock.unlock() }
+        if _isDone[index] {
+            return
+        }
+        
+        if _values[index] != nil {
+            _values[index] = nil
+            _numberOfValues -= 1
+        }
+    }
+    
+    func run(debounceDependencies: Bool) -> Disposable {
         var j = 0
         for i in _parent._sources.startIndex ..< _parent._sources.endIndex {
             let index = j
             let source = _parent._sources[i].asObservable()
-            _subscriptions[j].disposable = source.subscribe(AnyObserver { event in
-                self.on(event, atIndex: index)
-            })
+            
+            if debounceDependencies {
+                var extraDisposables: [Disposable] = []
+                for leafSource in source.leafSources {
+                    let subscription = SingleAssignmentDisposable()
+                    subscription.disposable = leafSource.subscribeAny { [weak self, weak subscription] in
+                        switch $0 {
+                        case .Next(_):
+                            self?.erase(index)
+                        case .Error, .Completed:
+                            subscription?.disposable.dispose()
+                        } }
+                    extraDisposables.append(subscription)
+                }
+                _eraseSubscriptions[index] = CompositeDisposable(disposables: extraDisposables)
+            }
+            
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: dispatch_get_main_queue())
+            _subscriptions[j].disposable = (debounceDependencies ? source.observeOn(mainScheduler) : source).subscribe(
+                AnyObserver { event in
+                    self.on(event, atIndex: index)
+                })
             
             j += 1
         }
         
-        return CompositeDisposable(disposables: _subscriptions.map { $0 })
+        return CompositeDisposable(disposables: (_subscriptions.map { $0 as Disposable } + _eraseSubscriptions))
     }
 }
 
@@ -110,16 +145,18 @@ class CombineLatestCollectionType<C: CollectionType, R where C.Generator.Element
     let _sources: C
     let _resultSelector: ResultSelector
     let _count: Int
+    let _debounceDependencies: Bool
 
-    init(sources: C, resultSelector: ResultSelector) {
+    init(sources: C, resultSelector: ResultSelector, debounceDependencies: Bool) {
         _sources = sources
         _resultSelector = resultSelector
         _count = Int(self._sources.count.toIntMax())
+        _debounceDependencies = debounceDependencies
     }
     
     override func run<O : ObserverType where O.E == R>(observer: O) -> Disposable {
         let sink = CombineLatestCollectionTypeSink(parent: self, observer: observer)
-        sink.disposable = sink.run()
+        sink.disposable = sink.run(_debounceDependencies)
         return sink
     }
 }

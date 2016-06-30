@@ -3996,6 +3996,82 @@ extension ObservableMultipleTest {
     }
 }
 
+// MARK: combineLatest + CollectionType + unbounceDependencies
+extension ObservableMultipleTest {
+    func testCombineLatest_CollectionType_DebounceDependenciesSameSource() {
+        var nEvents = 0
+        
+        let source = Variable<Int>(0)
+        var finalValue = -1
+        let observable = [source.asObservable(), source.asObservable()]
+            .combineLatest(debounceDependencies: true) { $0.reduce(0, combine: +) }
+        _ = observable.subscribeNext { n in
+            finalValue = n
+            nEvents += 1
+        }
+        
+        runRunLoop()
+        source.value = 1
+        runRunLoop()
+        source.value = 2
+        runRunLoop()
+        
+        XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 4)
+    }
+    
+    func testCombineLatest_CollectionType_DebounceDependenciesSameSourceIndirect() {
+        var nEvents = 0
+        
+        let source = Variable<Int>(0)
+        var finalValue = -1
+        let observable = [source.asObservable().map { $0 }, source.asObservable().map { $0 + 1 }]
+                           .combineLatest(debounceDependencies: true) { $0.reduce(0, combine: +) }
+        _ = observable.subscribeNext { n in
+            finalValue = n
+            nEvents += 1
+        }
+        
+        runRunLoop()
+        source.value = 1
+        runRunLoop()
+        source.value = 2
+        runRunLoop()
+        
+        XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 5)
+    }
+    
+    func testCombineLatest_CollectionType_DebounceDependenciesSameSourceViaVariable() {
+        var nEvents = 0
+        
+        let disposeBag = DisposeBag()
+        
+        let a = Variable<Int>(0)
+        let b = Variable<Int>(0)
+        let aObs = a.asObservable()
+        aObs
+            .bindTo(b)
+            .addDisposableTo(disposeBag)
+        var finalValue = -1
+        let observable = [aObs, b.asObservable()]
+            .combineLatest(debounceDependencies: true) { $0.reduce(0, combine: +) }
+        _ = observable.subscribeNext { n in
+            finalValue = n
+            nEvents += 1
+        }
+        
+        runRunLoop()
+        a.value = 1
+        runRunLoop()
+        a.value = 2
+        runRunLoop()
+        
+        XCTAssertEqual(nEvents, 3)
+        XCTAssertEqual(finalValue, 4)
+    }
+}
+
 // MARK: zip + CollectionType
 extension ObservableMultipleTest {
     func testZip_NAry_symmetric() {
