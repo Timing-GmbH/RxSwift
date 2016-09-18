@@ -13,25 +13,26 @@ import Foundation
 
 #if !RX_NO_MODULE
     import RxSwift
+    import RxCocoa
 #endif
     import UIKit
 
-    extension UIImagePickerController {
+    extension Reactive where Base: UIImagePickerController {
 
         /**
          Reactive wrapper for `delegate`.
 
          For more information take a look at `DelegateProxyType` protocol documentation.
          */
-        public var rx_delegate: DelegateProxy {
-            return RxImagePickerDelegateProxy.proxyForObject(self)
+        public var delegate: DelegateProxy {
+            return RxImagePickerDelegateProxy.proxyForObject(base)
         }
 
         /**
          Reactive wrapper for `delegate` message.
          */
-        public var rx_didFinishPickingMediaWithInfo: Observable<[String : AnyObject]> {
-            return rx_delegate
+        public var didFinishPickingMediaWithInfo: Observable<[String : AnyObject]> {
+            return delegate
                 .observe(#selector(UIImagePickerControllerDelegate.imagePickerController(_:didFinishPickingMediaWithInfo:)))
                 .map({ (a) in
                     return try castOrThrow(Dictionary<String, AnyObject>.self, a[1])
@@ -41,8 +42,8 @@ import Foundation
         /**
          Reactive wrapper for `delegate` message.
          */
-        public var rx_didCancel: Observable<()> {
-            return rx_delegate
+        public var didCancel: Observable<()> {
+            return delegate
                 .observe(#selector(UIImagePickerControllerDelegate.imagePickerControllerDidCancel(_:)))
                 .map {_ in () }
         }
@@ -50,3 +51,11 @@ import Foundation
     }
     
 #endif
+
+fileprivate func castOrThrow<T>(_ resultType: T.Type, _ object: AnyObject) throws -> T {
+    guard let returnValue = object as? T else {
+        throw RxCocoaError.castingError(object: object, targetType: resultType)
+    }
+
+    return returnValue
+}

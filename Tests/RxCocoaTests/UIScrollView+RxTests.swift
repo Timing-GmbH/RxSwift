@@ -22,18 +22,44 @@ extension UIScrollViewTests {
 
     func testScrollEnabled_False() {
         let scrollView = UIScrollView(frame: CGRect.zero)
-        scrollView.scrollEnabled = true
-        Observable.just(false).bindTo(scrollView.rx_scrollEnabled).dispose()
-        XCTAssertTrue(scrollView.scrollEnabled == false)
+        scrollView.isScrollEnabled = true
+        Observable.just(false).bindTo(scrollView.rx.scrollEnabled).dispose()
+        XCTAssertTrue(scrollView.isScrollEnabled == false)
     }
 
     func testScrollEnabled_True() {
         let scrollView = UIScrollView(frame: CGRect.zero)
-        scrollView.scrollEnabled = false
-        Observable.just(true).bindTo(scrollView.rx_scrollEnabled).dispose()
-        XCTAssertTrue(scrollView.scrollEnabled == true)
+        scrollView.isScrollEnabled = false
+        Observable.just(true).bindTo(scrollView.rx.scrollEnabled).dispose()
+        XCTAssertTrue(scrollView.isScrollEnabled == true)
     }
 
+}
+
+@objc class MockScrollViewDelegate
+    : NSObject
+    , UIScrollViewDelegate {
+
+}
+
+extension UIScrollViewTests {
+    func testSetDelegateUsesWeakReference() {
+
+        var delegateDeallocated = false
+
+        let scrollView = UIScrollView(frame: CGRect.zero)
+        autoreleasepool {
+            let delegate = MockScrollViewDelegate()
+            _ = scrollView.rx.setDelegate(delegate)
+
+            _ = delegate.rx.deallocated.subscribe(onNext: { _ in
+                delegateDeallocated = true
+            })
+
+            XCTAssert(delegateDeallocated == false)
+        }
+        XCTAssert(delegateDeallocated == true)
+    }
 }
 
 #endif

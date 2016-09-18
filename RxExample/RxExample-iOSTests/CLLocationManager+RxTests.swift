@@ -28,7 +28,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didUpdateLocations.subscribe(onNext: { l in
+            _ = manager.rx.didUpdateLocations.subscribe(onNext: { l in
                     location = l[0]
                 }, onCompleted: {
                     completed = true
@@ -48,8 +48,8 @@ extension CLLocationManagerTests {
 
         autoreleasepool {
             let manager = CLLocationManager()
-
-            _ = manager.rx_didFailWithError.subscribe(onNext: { e in
+            
+            _ = manager.rx.didFailWithError.subscribe(onNext: { e in
                 error = e
                 }, onCompleted: {
                     completed = true
@@ -71,7 +71,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didFinishDeferredUpdatesWithError.subscribe(onNext: { e in
+            _ = manager.rx.didFinishDeferredUpdatesWithError.subscribe(onNext: { e in
                 error = e
                 }, onCompleted: {
                     completed = true
@@ -91,7 +91,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didFinishDeferredUpdatesWithError.subscribe(onNext: { e in
+            _ = manager.rx.didFinishDeferredUpdatesWithError.subscribe(onNext: { e in
                 error = e
                 }, onCompleted: {
                     completed = true
@@ -115,7 +115,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didPauseLocationUpdates.subscribe(onNext: { u in
+            _ = manager.rx.didPauseLocationUpdates.subscribe(onNext: { u in
                     updates = u
                 }, onCompleted: {
                     completed = true
@@ -135,7 +135,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didResumeLocationUpdates.subscribe(onNext: { _ in
+            _ = manager.rx.didResumeLocationUpdates.subscribe(onNext: { _ in
                     updates = ()
                 }, onCompleted: {
                     completed = true
@@ -157,7 +157,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didUpdateHeading.subscribe(onNext: { n in
+            _ = manager.rx.didUpdateHeading.subscribe(onNext: { n in
                     heading = n
                 }, onCompleted: {
                     completed = true
@@ -179,7 +179,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didEnterRegion.subscribe(onNext: { n in
+            _ = manager.rx.didEnterRegion.subscribe(onNext: { n in
                     value = n
                 }, onCompleted: {
                     completed = true
@@ -201,7 +201,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didExitRegion.subscribe(onNext: { n in
+            _ = manager.rx.didExitRegion.subscribe(onNext: { n in
                     value = n
                 }, onCompleted: {
                     completed = true
@@ -222,18 +222,18 @@ extension CLLocationManagerTests {
         var completed = false
         var value: (CLRegionState, CLRegion)?
 
-        let targetValue = (CLRegionState.Inside, CLCircularRegion(center: CLLocationCoordinate2D(latitude: 90, longitude: 180), radius: 10, identifier: "unit tests in cloud"))
+        let targetValue = (CLRegionState.inside, CLCircularRegion(center: CLLocationCoordinate2D(latitude: 90, longitude: 180), radius: 10, identifier: "unit tests in cloud"))
 
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didDetermineStateForRegion.subscribe(onNext: { n in
+            _ = manager.rx.didDetermineStateForRegion.subscribe(onNext: { n in
                     value = (n.state, n.region)
                 }, onCompleted: {
                     completed = true
                 })
 
-            manager.delegate!.locationManager!(manager, didDetermineState: targetValue.0, forRegion: targetValue.1)
+            manager.delegate!.locationManager!(manager, didDetermineState: targetValue.0, for: targetValue.1)
         }
 
         XCTAssertEqual(value?.0, targetValue.0)
@@ -251,14 +251,14 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_monitoringDidFailForRegionWithError.subscribe(onNext: { l in
+            _ = manager.rx.monitoringDidFailForRegionWithError.subscribe(onNext: { l in
                     region = l.region
                     error = l.error
                 }, onCompleted: {
                     completed = true
                 })
 
-            manager.delegate!.locationManager!(manager, monitoringDidFailForRegion: targetRegion, withError: testError)
+            manager.delegate!.locationManager!(manager, monitoringDidFailFor: targetRegion, withError: testError)
         }
 
         XCTAssertEqual(targetRegion, region)
@@ -276,14 +276,14 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_monitoringDidFailForRegionWithError.subscribe(onNext: { l in
+            _ = manager.rx.monitoringDidFailForRegionWithError.subscribe(onNext: { l in
                 region = l.region
                 error = l.error
                 }, onCompleted: {
                     completed = true
             })
 
-            manager.delegate!.locationManager!(manager, monitoringDidFailForRegion: targetRegion, withError: testError)
+            manager.delegate!.locationManager!(manager, monitoringDidFailFor: targetRegion, withError: testError)
         }
 
         XCTAssertEqual(targetRegion, region)
@@ -300,13 +300,13 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didStartMonitoringForRegion.subscribe(onNext: { n in
+            _ = manager.rx.didStartMonitoringForRegion.subscribe(onNext: { n in
                     value = n
                 }, onCompleted: {
                     completed = true
                 })
 
-            manager.delegate!.locationManager!(manager, didStartMonitoringForRegion: targetValue)
+            manager.delegate!.locationManager!(manager, didStartMonitoringFor: targetValue)
         }
 
         XCTAssertEqual(value, targetValue)
@@ -317,29 +317,34 @@ extension CLLocationManagerTests {
 
     #if os(iOS)
     func testDidRangeBeaconsInRegion() {
+        
         var completed = false
         var value: ([CLBeacon], CLBeaconRegion)?
 
         let targetValue = (
-            [CLBeacon()],
-            CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "68753A44-4D6F-1226-9C60-0050E4C00067")!, identifier: "1231231")
+         // [CLBeacon()]
+         // TODO: This crashes on Xcode 8.0 beta version
+         // this is temporary workaround
+         [] as [CLBeacon],
+            CLBeaconRegion(proximityUUID: UUID(uuidString: "68753A44-4D6F-1226-9C60-0050E4C00067")!, identifier: "1231231")
         )
 
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didRangeBeaconsInRegion.subscribe(onNext: { n in
+            _ = manager.rx.didRangeBeaconsInRegion.subscribe(onNext: { n in
                     value = n
                 }, onCompleted: {
                     completed = true
                 })
 
-            manager.delegate!.locationManager!(manager, didRangeBeacons: targetValue.0, inRegion: targetValue.1)
+            manager.delegate!.locationManager!(manager, didRangeBeacons: targetValue.0, in: targetValue.1)
         }
 
         XCTAssertEqual(value!.0, targetValue.0)
         XCTAssertEqual(value!.1, targetValue.1)
         XCTAssertTrue(completed)
+        
     }
 
     func testRangingBeaconsDidFailForRegionWithError() {
@@ -347,20 +352,20 @@ extension CLLocationManagerTests {
         var value: (CLBeaconRegion, NSError)?
 
         let targetValue = (
-            CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "68753A44-4D6F-1226-9C60-0050E4C00067")!, identifier: "1231231"),
+            CLBeaconRegion(proximityUUID: UUID(uuidString: "68753A44-4D6F-1226-9C60-0050E4C00067")!, identifier: "1231231"),
             testError
         )
 
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_rangingBeaconsDidFailForRegionWithError.subscribe(onNext: { n in
+            _ = manager.rx.rangingBeaconsDidFailForRegionWithError.subscribe(onNext: { n in
                     value = n
                 }, onCompleted: {
                     completed = true
                 })
 
-            manager.delegate!.locationManager!(manager, rangingBeaconsDidFailForRegion: targetValue.0, withError: targetValue.1)
+            manager.delegate!.locationManager!(manager, rangingBeaconsDidFailFor: targetValue.0, withError: targetValue.1)
         }
 
         XCTAssertEqual(value!.0, targetValue.0)
@@ -379,7 +384,7 @@ extension CLLocationManagerTests {
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didVisit.subscribe(onNext: { n in
+            _ = manager.rx.didVisit.subscribe(onNext: { n in
                     value = n
                 }, onCompleted: {
                     completed = true
@@ -398,23 +403,23 @@ extension CLLocationManagerTests {
         var authorizationStatus: CLAuthorizationStatus?
 
         #if os(tvOS)
-        let targetAuthorizationStatus = CLAuthorizationStatus.AuthorizedAlways
+        let targetAuthorizationStatus = CLAuthorizationStatus.authorizedAlways
         #elseif os(iOS)
-        let targetAuthorizationStatus = CLAuthorizationStatus.AuthorizedAlways
+        let targetAuthorizationStatus = CLAuthorizationStatus.authorizedAlways
         #else
-        let targetAuthorizationStatus = CLAuthorizationStatus.Authorized
+        let targetAuthorizationStatus = CLAuthorizationStatus.authorized
         #endif
 
         autoreleasepool {
             let manager = CLLocationManager()
 
-            _ = manager.rx_didChangeAuthorizationStatus.subscribe(onNext: { status in
+            _ = manager.rx.didChangeAuthorizationStatus.subscribe(onNext: { status in
                     authorizationStatus = status
                 }, onCompleted: {
                     completed = true
             })
 
-            manager.delegate!.locationManager!(manager, didChangeAuthorizationStatus:targetAuthorizationStatus)
+            manager.delegate!.locationManager!(manager, didChangeAuthorization:targetAuthorizationStatus)
         }
 
         XCTAssertEqual(authorizationStatus, targetAuthorizationStatus)

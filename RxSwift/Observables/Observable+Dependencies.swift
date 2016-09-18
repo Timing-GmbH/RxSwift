@@ -9,12 +9,12 @@
 import Foundation
 
 public protocol ObservableUsable: class {
-    func subscribeAny(on: (event: Event<Any>) -> Void) -> Disposable
+    func subscribeAny(_ on: @escaping (Event<Any>) -> Void) -> Disposable
 }
 
-private func unwrap(any: Any) -> Any? {
+private func unwrap(_ any: Any) -> Any? {
     let mirror = Mirror(reflecting: any)
-    if mirror.displayStyle != .Optional {
+    if mirror.displayStyle != .optional {
         return any
     }
     
@@ -29,7 +29,7 @@ public extension ObservableUsable {
         var result: [ObservableUsable] = []
         let mirror = Mirror(reflecting: self)
         for case let (label?, value) in mirror.children {
-            if label.containsString("source"),
+            if label.contains("source"),
                 // We need to use unwrap() here to also cover cases where the source variable is an Optional, as just
                 // as? could not unwrap that otherwise.
                 let observableValue = unwrap(value) as? ObservableUsable {
@@ -49,15 +49,15 @@ public extension ObservableUsable {
 }
 
 extension Observable: ObservableUsable {
-    public func subscribeAny(on: (event: Event<Any>) -> Void) -> Disposable {
+    public func subscribeAny(_ on: @escaping (Event<Any>) -> Void) -> Disposable {
         return subscribe {
             switch $0 {
-            case .Next(let element):
-                on(event: .Next(element))
-            case .Error(let error):
-                on(event: .Error(error))
-            case .Completed:
-                on(event: .Completed)
+            case .next(let element):
+                on(.next(element))
+            case .error(let error):
+                on(.error(error))
+            case .completed:
+                on(.completed)
             }
         }
     }
@@ -71,13 +71,13 @@ class Leaf<SourceType>: Producer<SourceType> {
         _src = source
     }
     
-    override func run<O: ObserverType where O.E == SourceType>(observer: O) -> Disposable {
+    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == SourceType {
         return _src.subscribe(observer)
     }
 }
 
 extension ObservableType {
-    @warn_unused_result(message="http://git.io/rxs.uo")
+    // @warn_unused_result(message="http://git.io/rxs.uo")
     public func treatAsLeaf() -> Observable<E> {
         return Leaf(source: self.asObservable())
     }

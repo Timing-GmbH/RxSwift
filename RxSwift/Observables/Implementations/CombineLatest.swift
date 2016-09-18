@@ -9,10 +9,10 @@
 import Foundation
 
 protocol CombineLatestProtocol : class {
-    func next(index: Int)
-    func fail(error: ErrorType)
-    func done(index: Int)
-    func erase(index: Int)
+    func next(_ index: Int)
+    func fail(_ error: Swift.Error)
+    func done(_ index: Int)
+    func erase(_ index: Int)
 }
 
 class CombineLatestSink<O: ObserverType>
@@ -30,8 +30,8 @@ class CombineLatestSink<O: ObserverType>
    
     init(arity: Int, observer: O) {
         _arity = arity
-        _hasValue = [Bool](count: arity, repeatedValue: false)
-        _isDone = [Bool](count: arity, repeatedValue: false)
+        _hasValue = [Bool](repeating: false, count: arity)
+        _isDone = [Bool](repeating: false, count: arity)
         
         super.init(observer: observer)
     }
@@ -40,7 +40,7 @@ class CombineLatestSink<O: ObserverType>
         abstractMethod()
     }
     
-    func next(index: Int) {
+    func next(_ index: Int) {
         if !_hasValue[index] {
             _hasValue[index] = true
             _numberOfValues += 1
@@ -49,10 +49,10 @@ class CombineLatestSink<O: ObserverType>
         if _numberOfValues == _arity {
             do {
                 let result = try getResult()
-                forwardOn(.Next(result))
+                forwardOn(.next(result))
             }
             catch let e {
-                forwardOn(.Error(e))
+                forwardOn(.error(e))
                 dispose()
             }
         }
@@ -67,18 +67,18 @@ class CombineLatestSink<O: ObserverType>
             }
             
             if allOthersDone {
-                forwardOn(.Completed)
+                forwardOn(.completed)
                 dispose()
             }
         }
     }
     
-    func fail(error: ErrorType) {
-        forwardOn(.Error(error))
+    func fail(_ error: Swift.Error) {
+        forwardOn(.error(error))
         dispose()
     }
     
-    func done(index: Int) {
+    func done(_ index: Int) {
         if _isDone[index] {
             return
         }
@@ -87,12 +87,12 @@ class CombineLatestSink<O: ObserverType>
         _numberOfDone += 1
 
         if _numberOfDone == _arity {
-            forwardOn(.Completed)
+            forwardOn(.completed)
             dispose()
         }
     }
     
-    func erase(index: Int) {
+    func erase(_ index: Int) {
         if _isDone[index] {
             return
         }
@@ -118,7 +118,7 @@ class CombineLatestObserver<ElementType>
     private let _this: Disposable
     private let _setLatestValue: ValueSetter
     
-    init(lock: NSRecursiveLock, parent: CombineLatestProtocol, index: Int, setLatestValue: ValueSetter, this: Disposable) {
+    init(lock: NSRecursiveLock, parent: CombineLatestProtocol, index: Int, setLatestValue: @escaping ValueSetter, this: Disposable) {
         _lock = lock
         _parent = parent
         _index = index
@@ -126,19 +126,19 @@ class CombineLatestObserver<ElementType>
         _setLatestValue = setLatestValue
     }
     
-    func on(event: Event<Element>) {
+    func on(_ event: Event<Element>) {
         synchronizedOn(event)
     }
-    
-    func _synchronized_on(event: Event<Element>) {
+
+    func _synchronized_on(_ event: Event<Element>) {
         switch event {
-        case .Next(let value):
+        case .next(let value):
             _setLatestValue(value)
             _parent.next(_index)
-        case .Error(let error):
+        case .error(let error):
             _this.dispose()
             _parent.fail(error)
-        case .Completed:
+        case .completed:
             _this.dispose()
             _parent.done(_index)
         }
@@ -162,15 +162,15 @@ class CombineLatestEraseObserver
         _this = this
     }
     
-    func on(event: Event<Any>) {
+    func on(_ event: Event<Any>) {
         synchronizedOn(event)
     }
     
-    func _synchronized_on(event: Event<Any>) {
+    func _synchronized_on(_ event: Event<Any>) {
         switch event {
-        case .Next(_):
+        case .next(_):
             _parent.erase(_index)
-        case .Error, .Completed:
+        case .error, .completed:
             _this.dispose()
         }
     }

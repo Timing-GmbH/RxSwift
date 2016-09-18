@@ -27,15 +27,18 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
         super.init()
     }
     
-    public func collectionView(collectionView: UICollectionView, observedEvent: Event<Element>) {
+    public func collectionView(_ collectionView: UICollectionView, observedEvent: Event<Element>) {
         UIBindingObserver(UIElement: self) { dataSource, newSections in
+            #if DEBUG
+                self._dataSourceBound = true
+            #endif
             if !self.dataSet {
                 self.dataSet = true
                 dataSource.setSections(newSections)
                 collectionView.reloadData()
             }
             else {
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     let oldSections = dataSource.sectionModels
                     do {
                         let differences = try differencesForSectionedView(oldSections, finalSections: newSections)
@@ -47,7 +50,10 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
                         }
                     }
                     catch let e {
+                        #if DEBUG
+                        print("Error while binding data animated: \(e)\nFallback to normal `reloadData` behavior.")
                         rxDebugFatalError(e)
+                        #endif
                         self.setSections(newSections)
                         collectionView.reloadData()
                     }
