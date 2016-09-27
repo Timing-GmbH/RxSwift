@@ -29,7 +29,7 @@ public extension ObservableUsable {
         var result: [ObservableUsable] = []
         let mirror = Mirror(reflecting: self)
         for case let (label?, value) in mirror.children {
-            if label.contains("source"),
+            if label.contains("source") || label.contains("first") || label.contains("pauser"),
                 // We need to use unwrap() here to also cover cases where the source variable is an Optional, as just
                 // as? could not unwrap that otherwise.
                 let observableValue = unwrap(value) as? ObservableUsable {
