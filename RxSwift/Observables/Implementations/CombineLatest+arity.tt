@@ -42,9 +42,9 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joined(sepa
 "    var _latestElement\($0): E\($0)! = nil"
 }).joined(separator: "\n") %>
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: <%= i %>, observer: observer)
+        super.init(arity: <%= i %>, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -56,7 +56,7 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joined(sepa
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -75,11 +75,11 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joined(sepa
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
 <%= (Array(1...i).map {
-"            subscription\($0).disposable = _parent._source\($0).observeOn(mainScheduler).subscribe(observer\($0))"
+"            subscription\($0).setDisposable(_parent._source\($0).observeOn(mainScheduler).subscribe(observer\($0)))"
 }).joined(separator: "\n") %>
         } else {
 <%= (Array(1...i).map {
-"            subscription\($0).disposable = _parent._source\($0).subscribe(observer\($0))"
+"            subscription\($0).setDisposable(_parent._source\($0).subscribe(observer\($0)))"
 }).joined(separator: "\n") %>
         }
 
@@ -112,10 +112,10 @@ class CombineLatest<%= i %><<%= (Array(1...i).map { "E\($0)" }).joined(separator
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink<%= i %>_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink<%= i %>_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 

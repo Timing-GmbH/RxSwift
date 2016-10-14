@@ -1,17 +1,11 @@
 import PackageDescription
 
-#if os(OSX)
+#if !os(Linux)
 let package = Package(
     name: "RxSwift",
     targets: [
         Target(
             name: "RxSwift"
-        ),
-        Target(
-            name: "RxTests",
-            dependencies: [
-                .Target(name: "RxSwift")
-            ]
         ),
         Target(
             name: "RxBlocking",
@@ -20,32 +14,44 @@ let package = Package(
             ]
         ),
         Target(
-            name: "AllTests",
+            name: "RxCocoaRuntime",
+            dependencies: [
+                .Target(name: "RxSwift")
+            ]
+        ),
+        Target(
+            name: "RxCocoa",
+            dependencies: [
+                .Target(name: "RxSwift"),
+                .Target(name: "RxCocoaRuntime")
+            ]
+        ),
+        Target(
+            name: "RxTest",
+            dependencies: [
+                .Target(name: "RxSwift")
+            ]
+        ),
+        Target(
+            name: "AllTestz",
             dependencies: [
                 .Target(name: "RxSwift"),
                 .Target(name: "RxBlocking"),
-                .Target(name: "RxTests")
+                .Target(name: "RxTest"),
+                .Target(name: "RxCocoa")
             ]
         )
     ],
     exclude: [
-        "Sources/RxCocoa",
-        "Sources/RxTests",
-        "Sources/AllTests"
+        "Tests"
     ]
 )
-#elseif os(Linux)
+#else 
 let package = Package(
     name: "RxSwift",
     targets: [
         Target(
             name: "RxSwift"
-        ),
-        Target(
-            name: "RxTests",
-            dependencies: [
-                .Target(name: "RxSwift")
-            ]
         ),
         Target(
             name: "RxBlocking",
@@ -54,16 +60,30 @@ let package = Package(
             ]
         ),
         Target(
-            name: "AllTests",
+            name: "RxCocoa",
+            dependencies: [
+                .Target(name: "RxSwift")
+            ]
+        ),
+        Target(
+            name: "RxTest",
+            dependencies: [
+                .Target(name: "RxSwift")
+            ]
+        ),
+        Target(
+            name: "AllTestz",
             dependencies: [
                 .Target(name: "RxSwift"),
                 .Target(name: "RxBlocking"),
-                .Target(name: "RxTests")
+                .Target(name: "RxTest"),
+                .Target(name: "RxCocoa")
             ]
         )
     ],
     exclude: [
-        "Sources/RxCocoa",
+        "Tests",
+        "Sources/RxCocoaRuntime"
     ]
 )
 #endif

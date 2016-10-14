@@ -71,8 +71,8 @@ class Leaf<SourceType>: Producer<SourceType> {
         _src = source
     }
     
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == SourceType {
-        return _src.subscribe(observer)
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == SourceType {
+		return (sink: NopDisposable(), subscription: Disposables.create(_src.subscribe(observer), cancel))
     }
 }
 

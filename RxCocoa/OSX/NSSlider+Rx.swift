@@ -6,6 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
+#if os(OSX)
+
 import Foundation
 #if !RX_NO_MODULE
 import RxSwift
@@ -18,7 +20,7 @@ extension Reactive where Base: NSSlider {
     Reactive wrapper for `value` property.
     */
     public var value: ControlProperty<Double> {
-        return Reactive<NSControl>.value(
+        return NSControl.rx.value(
             base,
             getter: { control in
                 return control.doubleValue
@@ -30,3 +32,5 @@ extension Reactive where Base: NSSlider {
     }
     
 }
+
+#endif

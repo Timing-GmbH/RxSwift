@@ -21,7 +21,7 @@ open class Observable<Element> : ObservableType {
     
     public init() {
 #if TRACE_RESOURCES
-        OSAtomicIncrement32(&resourceCount)
+        let _ = AtomicIncrement(&resourceCount)
 #endif
     }
     

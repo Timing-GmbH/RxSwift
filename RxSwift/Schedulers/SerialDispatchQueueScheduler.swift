@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 /**
 Abstracts the work that needs to be performed on a specific `dispatch_queue_t`. It will make sure 

@@ -6,6 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
+#if os(OSX)
+
 import Foundation
 import Cocoa
 #if !RX_NO_MODULE
@@ -81,9 +83,11 @@ extension Reactive where Base: NSControl {
     /**
      Bindable sink for `enabled` property.
     */
-    public var enabled: AnyObserver<Bool> {
+    public var enabled: UIBindingObserver<Base, Bool> {
         return UIBindingObserver(UIElement: self.base) { (owner, value) in
             owner.isEnabled = value
-        }.asObserver()
+        }
     }
 }
+
+#endif

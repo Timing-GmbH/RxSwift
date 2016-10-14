@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "RxCocoa"
-  s.version          = "3.0.0-beta.1"
+  s.version          = "3.0.0-beta.2"
   s.summary          = "RxSwift Cocoa extensions"
   s.description      = <<-DESC
 * UI extensions
@@ -19,11 +19,11 @@ Pod::Spec.new do |s|
   s.watchos.deployment_target = '2.0'
   s.tvos.deployment_target = '9.0'
 
-  s.source_files          = 'RxCocoa/RxCocoa.h', 'RxCocoa/Common/**/*.{swift,h,m}'
+  s.source_files          = 'RxCocoa/RxCocoa.h', 'RxCocoa/RxCocoa.swift', 'RxCocoa/Common/**/*.{swift,h,m}', 'RxCocoa/CocoaUnits/**/*.{swift,h,m}', 'RxCocoa/Foundation/**/*.{swift,h,m}', 'RxCocoa/Runtime/**/*.{swift,h,m}'
   s.ios.source_files      = 'RxCocoa/iOS/**/*.swift'
   s.osx.source_files      = 'RxCocoa/OSX/**/*.swift'
   s.watchos.source_files  = 'RxCocoa/iOS/**/*.swift'
   s.tvos.source_files     = 'RxCocoa/iOS/**/*.swift'
 
-  s.dependency 'RxSwift', '~> 3.0.0-beta.1'
+  s.dependency 'RxSwift', '~> 3.0.0-beta.2'
 end

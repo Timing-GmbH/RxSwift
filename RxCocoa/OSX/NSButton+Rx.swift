@@ -6,6 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
+#if os(OSX)
+
 import Foundation
 #if !RX_NO_MODULE
 import RxSwift
@@ -25,7 +27,7 @@ extension Reactive where Base: NSButton {
     Reactive wrapper for `state` property`.
     */
     public var state: ControlProperty<Int> {
-        return Reactive<NSButton>.value(
+        return NSButton.rx.value(
             base,
             getter: { control in
                 return control.state
@@ -35,3 +37,5 @@ extension Reactive where Base: NSButton {
         )
     }
 }
+
+#endif

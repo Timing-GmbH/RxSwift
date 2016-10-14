@@ -6,6 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 #if !RX_NO_MODULE
 import RxSwift
@@ -254,6 +256,7 @@ extension ObservableType {
             }
             // source can never end, otherwise it would release the subscriber, and deallocate the data source
             .concat(Observable.never())
+            .takeUntil((object as! NSObject).rx.deallocated)
             .subscribe { [weak object] (event: Event<E>) in
                 MainScheduler.ensureExecutingOnScheduler()
 
@@ -277,3 +280,5 @@ extension ObservableType {
         return Disposables.create(subscription, disposable)
     }
 }
+
+#endif

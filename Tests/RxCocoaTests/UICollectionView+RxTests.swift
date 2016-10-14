@@ -260,13 +260,16 @@ extension UICollectionViewTests {
     func testDataSourceIsBeingRetainedUntilDispose() {
         var dataSourceDeallocated = false
 
+        var collectionViewOuter: UICollectionView? = nil
         var dataSourceSubscription: Disposable!
+        collectionViewOuter?.becomeFirstResponder()
         autoreleasepool {
             let items: Observable<[Int]> = Observable.just([1, 2, 3])
 
             let layout = UICollectionViewFlowLayout()
             let collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: 1, height: 1), collectionViewLayout: layout)
             collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "a")
+            collectionViewOuter = collectionView
             let dataSource = SectionedViewDataSourceMock()
             dataSourceSubscription = items.bindTo(collectionView.rx.items(dataSource: dataSource))
 

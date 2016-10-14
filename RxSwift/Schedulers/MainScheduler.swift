@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 /**
 Abstracts work that needs to be performed on `MainThread`. In case `schedule` methods are called from main thread, it will perform action immediately without scheduling.
@@ -24,7 +25,10 @@ public final class MainScheduler : SerialDispatchQueueScheduler {
 
     var numberEnqueued: AtomicInt = 0
 
-    private init() {
+    /**
+     Initializes new instance of `MainScheduler`.
+    */
+    public init() {
         _mainQueue = DispatchQueue.main
         super.init(serialQueue: _mainQueue)
     }

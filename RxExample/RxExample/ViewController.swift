@@ -79,7 +79,7 @@ class ViewController: OSViewController {
         
         If somebody knows more about why this delay happens, you can make a PR with explanation here.
         */
-        let when = DispatchTime.now() + DispatchTimeInterval.milliseconds(UIApplication.isInUITest ? 1000 : 10)
+        let when = DispatchTime.now() + DispatchTimeInterval.milliseconds(OSApplication.isInUITest ? 1000 : 10)
 
         mainQueue.asyncAfter (deadline: when) {
 

@@ -42,9 +42,9 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
     var _latestElement1: E1! = nil
     var _latestElement2: E2! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 2, observer: observer)
+        super.init(arity: 2, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -56,7 +56,7 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -72,11 +72,11 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
         }
 
         return Disposables.create(disposables + [
@@ -107,10 +107,10 @@ class CombineLatest2<E1, E2, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink2_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink2_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 
@@ -148,9 +148,9 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
     var _latestElement2: E2! = nil
     var _latestElement3: E3! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 3, observer: observer)
+        super.init(arity: 3, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -162,7 +162,7 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -180,13 +180,13 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.observeOn(mainScheduler).subscribe(observer3))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
-            subscription3.disposable = _parent._source3.subscribe(observer3)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.subscribe(observer3))
         }
 
         return Disposables.create(disposables + [
@@ -220,10 +220,10 @@ class CombineLatest3<E1, E2, E3, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink3_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink3_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 
@@ -262,9 +262,9 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
     var _latestElement3: E3! = nil
     var _latestElement4: E4! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 4, observer: observer)
+        super.init(arity: 4, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -276,7 +276,7 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -296,15 +296,15 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.observeOn(mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.observeOn(mainScheduler).subscribe(observer4))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
-            subscription3.disposable = _parent._source3.subscribe(observer3)
-            subscription4.disposable = _parent._source4.subscribe(observer4)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.subscribe(observer4))
         }
 
         return Disposables.create(disposables + [
@@ -341,10 +341,10 @@ class CombineLatest4<E1, E2, E3, E4, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink4_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink4_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 
@@ -384,9 +384,9 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
     var _latestElement4: E4! = nil
     var _latestElement5: E5! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 5, observer: observer)
+        super.init(arity: 5, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -398,7 +398,7 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -420,17 +420,17 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.observeOn(mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.observeOn(mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.observeOn(mainScheduler).subscribe(observer5))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
-            subscription3.disposable = _parent._source3.subscribe(observer3)
-            subscription4.disposable = _parent._source4.subscribe(observer4)
-            subscription5.disposable = _parent._source5.subscribe(observer5)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.subscribe(observer5))
         }
 
         return Disposables.create(disposables + [
@@ -470,10 +470,10 @@ class CombineLatest5<E1, E2, E3, E4, E5, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink5_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink5_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 
@@ -514,9 +514,9 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
     var _latestElement5: E5! = nil
     var _latestElement6: E6! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 6, observer: observer)
+        super.init(arity: 6, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -528,7 +528,7 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -552,19 +552,19 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
-            subscription6.disposable = _parent._source6.observeOn(mainScheduler).subscribe(observer6)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.observeOn(mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.observeOn(mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.observeOn(mainScheduler).subscribe(observer5))
+            subscription6.setDisposable(_parent._source6.observeOn(mainScheduler).subscribe(observer6))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
-            subscription3.disposable = _parent._source3.subscribe(observer3)
-            subscription4.disposable = _parent._source4.subscribe(observer4)
-            subscription5.disposable = _parent._source5.subscribe(observer5)
-            subscription6.disposable = _parent._source6.subscribe(observer6)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.subscribe(observer5))
+            subscription6.setDisposable(_parent._source6.subscribe(observer6))
         }
 
         return Disposables.create(disposables + [
@@ -607,10 +607,10 @@ class CombineLatest6<E1, E2, E3, E4, E5, E6, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink6_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink6_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 
@@ -652,9 +652,9 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
     var _latestElement6: E6! = nil
     var _latestElement7: E7! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 7, observer: observer)
+        super.init(arity: 7, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -666,7 +666,7 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -692,21 +692,21 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
-            subscription6.disposable = _parent._source6.observeOn(mainScheduler).subscribe(observer6)
-            subscription7.disposable = _parent._source7.observeOn(mainScheduler).subscribe(observer7)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.observeOn(mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.observeOn(mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.observeOn(mainScheduler).subscribe(observer5))
+            subscription6.setDisposable(_parent._source6.observeOn(mainScheduler).subscribe(observer6))
+            subscription7.setDisposable(_parent._source7.observeOn(mainScheduler).subscribe(observer7))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
-            subscription3.disposable = _parent._source3.subscribe(observer3)
-            subscription4.disposable = _parent._source4.subscribe(observer4)
-            subscription5.disposable = _parent._source5.subscribe(observer5)
-            subscription6.disposable = _parent._source6.subscribe(observer6)
-            subscription7.disposable = _parent._source7.subscribe(observer7)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.subscribe(observer5))
+            subscription6.setDisposable(_parent._source6.subscribe(observer6))
+            subscription7.setDisposable(_parent._source7.subscribe(observer7))
         }
 
         return Disposables.create(disposables + [
@@ -752,10 +752,10 @@ class CombineLatest7<E1, E2, E3, E4, E5, E6, E7, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink7_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink7_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 
@@ -798,9 +798,9 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
     var _latestElement7: E7! = nil
     var _latestElement8: E8! = nil
 
-    init(parent: Parent, observer: O) {
+    init(parent: Parent, observer: O, cancel: Cancelable) {
         _parent = parent
-        super.init(arity: 8, observer: observer)
+        super.init(arity: 8, observer: observer, cancel: cancel)
     }
 
     func run(debounceDependencies: Bool) -> Disposable {
@@ -812,7 +812,7 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
-                    subscription.disposable = leafSource.subscribeAny { observer.on($0) }
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
             }
@@ -840,23 +840,23 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.disposable = _parent._source1.observeOn(mainScheduler).subscribe(observer1)
-            subscription2.disposable = _parent._source2.observeOn(mainScheduler).subscribe(observer2)
-            subscription3.disposable = _parent._source3.observeOn(mainScheduler).subscribe(observer3)
-            subscription4.disposable = _parent._source4.observeOn(mainScheduler).subscribe(observer4)
-            subscription5.disposable = _parent._source5.observeOn(mainScheduler).subscribe(observer5)
-            subscription6.disposable = _parent._source6.observeOn(mainScheduler).subscribe(observer6)
-            subscription7.disposable = _parent._source7.observeOn(mainScheduler).subscribe(observer7)
-            subscription8.disposable = _parent._source8.observeOn(mainScheduler).subscribe(observer8)
+            subscription1.setDisposable(_parent._source1.observeOn(mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.observeOn(mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.observeOn(mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.observeOn(mainScheduler).subscribe(observer5))
+            subscription6.setDisposable(_parent._source6.observeOn(mainScheduler).subscribe(observer6))
+            subscription7.setDisposable(_parent._source7.observeOn(mainScheduler).subscribe(observer7))
+            subscription8.setDisposable(_parent._source8.observeOn(mainScheduler).subscribe(observer8))
         } else {
-            subscription1.disposable = _parent._source1.subscribe(observer1)
-            subscription2.disposable = _parent._source2.subscribe(observer2)
-            subscription3.disposable = _parent._source3.subscribe(observer3)
-            subscription4.disposable = _parent._source4.subscribe(observer4)
-            subscription5.disposable = _parent._source5.subscribe(observer5)
-            subscription6.disposable = _parent._source6.subscribe(observer6)
-            subscription7.disposable = _parent._source7.subscribe(observer7)
-            subscription8.disposable = _parent._source8.subscribe(observer8)
+            subscription1.setDisposable(_parent._source1.subscribe(observer1))
+            subscription2.setDisposable(_parent._source2.subscribe(observer2))
+            subscription3.setDisposable(_parent._source3.subscribe(observer3))
+            subscription4.setDisposable(_parent._source4.subscribe(observer4))
+            subscription5.setDisposable(_parent._source5.subscribe(observer5))
+            subscription6.setDisposable(_parent._source6.subscribe(observer6))
+            subscription7.setDisposable(_parent._source7.subscribe(observer7))
+            subscription8.setDisposable(_parent._source8.subscribe(observer8))
         }
 
         return Disposables.create(disposables + [
@@ -905,10 +905,10 @@ class CombineLatest8<E1, E2, E3, E4, E5, E6, E7, E8, R> : Producer<R> {
         _resultSelector = resultSelector
     }
 
-    override func run<O: ObserverType>(_ observer: O) -> Disposable where O.E == R {
-        let sink = CombineLatestSink8_(parent: self, observer: observer)
-        sink.disposable = sink.run(debounceDependencies: _debounceDependencies)
-        return sink
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink8_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
     }
 }
 

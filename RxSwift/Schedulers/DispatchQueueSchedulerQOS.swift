@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 /**
 Identifies one of the global concurrent dispatch queues with specified quality of service class.
