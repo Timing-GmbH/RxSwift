@@ -112,7 +112,7 @@ class CombineLatestCollectionTypeSink<C: Collection, R, O: ObserverType>
 
             if debounceDependencies {
                 var extraDisposables: [Disposable] = []
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     let disposable = leafSource.subscribeAny { [weak self, weak subscription] in
                         switch $0 {

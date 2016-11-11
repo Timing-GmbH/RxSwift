@@ -52,7 +52,7 @@ class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joined(sepa
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)

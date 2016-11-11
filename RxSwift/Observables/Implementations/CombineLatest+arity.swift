@@ -52,7 +52,7 @@ class CombineLatestSink2_<E1, E2, O: ObserverType> : CombineLatestSink<O> {
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
@@ -158,7 +158,7 @@ class CombineLatestSink3_<E1, E2, E3, O: ObserverType> : CombineLatestSink<O> {
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
@@ -272,7 +272,7 @@ class CombineLatestSink4_<E1, E2, E3, E4, O: ObserverType> : CombineLatestSink<O
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
@@ -394,7 +394,7 @@ class CombineLatestSink5_<E1, E2, E3, E4, E5, O: ObserverType> : CombineLatestSi
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
@@ -524,7 +524,7 @@ class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, O: ObserverType> : CombineLate
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
@@ -662,7 +662,7 @@ class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, O: ObserverType> : Combine
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
@@ -808,7 +808,7 @@ class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, O: ObserverType> : Com
         
         if debounceDependencies {
             for (index, source) in _parent.observableSources.enumerated() {
-                for leafSource in source.leafSources {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
                     let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)

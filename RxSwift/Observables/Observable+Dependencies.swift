@@ -24,6 +24,38 @@ private func unwrap(_ any: Any) -> Any? {
     
 }
 
+private struct PointerEqualityWrapper<T>: Hashable where T: AnyObject {
+	let value: T
+	
+	var hashValue: Int { return ObjectIdentifier(value).hashValue }
+	
+	static func ==<T>(A: PointerEqualityWrapper<T>, B: PointerEqualityWrapper<T>) -> Bool {
+		return A.value === B.value
+	}
+}
+
+private struct ObservableUsableEqualityWrapper: Hashable {
+	let value: ObservableUsable
+	
+	var hashValue: Int { return ObjectIdentifier(value).hashValue }
+	
+	static func ==(A: ObservableUsableEqualityWrapper, B: ObservableUsableEqualityWrapper) -> Bool {
+		return A.value === B.value
+	}
+}
+
+public extension Sequence where Iterator.Element: AnyObject {
+	func deduplicatedByPointer() -> [Iterator.Element] {
+		return Array(Set(self.map { PointerEqualityWrapper(value: $0) }).map { $0.value })
+	}
+}
+
+public extension Sequence where Iterator.Element == ObservableUsable {
+	func deduplicatedByPointer() -> [ObservableUsable] {
+		return Array(Set(self.map { ObservableUsableEqualityWrapper(value: $0) }).map { $0.value })
+	}
+}
+
 public extension ObservableUsable {
     public var observableSources: [ObservableUsable] {
         var result: [ObservableUsable] = []
