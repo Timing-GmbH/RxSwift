@@ -76,7 +76,13 @@ public extension ObservableUsable {
     }
     
     public var leafSources: [ObservableUsable] {
-        return observableSourcesTree.filter { $0.observableSources.isEmpty }
+		// This is quite a bit faster than `observableSourcesTree.filter { $0.observableSources.isEmpty }`.
+		let observableSources = self.observableSources
+		if !observableSources.isEmpty {
+			return observableSources.flatMap { $0.leafSources }
+		} else {
+			return [self]
+		}
     }
 }
 
