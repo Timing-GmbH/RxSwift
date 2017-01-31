@@ -29,9 +29,9 @@ extension SharedSequenceConvertibleType {
     }
     
     // @warn_unused_result(message="http://git.io/rxs.uo")
-    public func treatAsLeaf() -> Driver<E> {
-        return Driver(self.asObservable().treatAsLeaf())
-}
+	public func treatAsLeaf() -> Driver<E> {
+		return Driver(self.asObservable().treatAsLeaf())
+	}
 }
 
 // MARK: filter

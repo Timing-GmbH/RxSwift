@@ -101,6 +101,7 @@ extension Observable: ObservableUsable {
     }
 }
 
+// MARK: -
 class Leaf<SourceType>: Producer<SourceType> {
     // This must not be called _source as the whole point of this class is to disguise the observable's "real" source.
     private let _src: Observable<SourceType>
@@ -119,4 +120,29 @@ extension ObservableType {
     public func treatAsLeaf() -> Observable<E> {
         return Leaf(source: self.asObservable())
     }
+}
+
+// MARK: -
+class IndirectDependency<SourceType, DependencyType>: Producer<SourceType> {
+	// This must not be called _source as the whole point of this class is to disguise the observable's "real" source.
+	private let _source: Observable<SourceType>
+	private let _indirectDependencySource: Observable<DependencyType>
+	
+	init(source: Observable<SourceType>, dependency: Observable<DependencyType>) {
+		_source = source
+		_indirectDependencySource = dependency
+	}
+	
+	override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == SourceType {
+		return (sink: NopDisposable(), subscription: Disposables.create(_source.subscribe(observer), cancel))
+	}
+}
+
+extension ObservableType {
+	// @warn_unused_result(message="http://git.io/rxs.uo")
+	// When using `debounceDependencies: true`, this causes the leaf dependencies of `dependency` to also count as
+	// dependencies for `source`.
+	public func withIndirectDependency<DependencyType>(_ dependency: Observable<DependencyType>) -> Observable<E> {
+		return IndirectDependency(source: self.asObservable(), dependency: dependency)
+	}
 }
