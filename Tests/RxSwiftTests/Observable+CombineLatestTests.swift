@@ -1729,3 +1729,213 @@ extension ObservableCombineLatestTest {
         }
     #endif
 }
+
+// MARK: combine latest with dependencies
+extension ObservableCombineLatestTest {
+	func runRunLoop() {
+		for _ in 0 ..< 10 {
+			let currentRunLoop = CFRunLoopGetCurrent()
+			DispatchQueue.main.async {
+				CFRunLoopStop(currentRunLoop)
+			}
+			
+			CFRunLoopWakeUp(currentRunLoop)
+			CFRunLoopRun()
+		}
+	}
+	
+	func testCombineLatest_DebounceDependenciesSameSource() {
+		var nEvents = 0
+		
+		let source = Variable<Int>(0)
+		var finalValue = -1
+		let observable = Observable
+			.combineLatest(source.asObservable(), source.asObservable(), debounceDependencies: true) { $0 + $1 }
+		_ = observable.subscribe(onNext: { n in
+			finalValue = n
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		source.value = 1
+		runRunLoop()
+		source.value = 2
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 3)
+		XCTAssertEqual(finalValue, 4)
+	}
+	
+	//! TODO: Test treatAsLeaf().
+	func testCombineLatest_DebounceDependenciesSameSourceIndirect() {
+		var nEvents = 0
+		
+		let source = Variable<Int>(0)
+		var finalValue = -1
+		let observable = Observable
+			.combineLatest(source.asObservable().map { $0 }, source.asObservable().map { $0 + 1 },
+			               debounceDependencies: true) { $0 + $1 }
+		_ = observable.subscribe(onNext: { n in
+			finalValue = n
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		source.value = 1
+		runRunLoop()
+		source.value = 2
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 3)
+		XCTAssertEqual(finalValue, 5)
+	}
+	
+	func testCombineLatest_DebounceDependenciesSameSourceViaVariable() {
+		var nEvents = 0
+		
+		let disposeBag = DisposeBag()
+		
+		let a = Variable<Int>(0)
+		let b = Variable<Int>(0)
+		let aObs = a.asObservable()
+		aObs
+			.bind(to: b)
+			.addDisposableTo(disposeBag)
+		var finalValue = -1
+		let observable = Observable
+			.combineLatest(aObs, b.asObservable(), debounceDependencies: true) { $0 + $1 }
+		_ = observable.subscribe(onNext: { n in
+			finalValue = n
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		a.value = 1
+		runRunLoop()
+		a.value = 2
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 3)
+		XCTAssertEqual(finalValue, 4)
+	}
+	
+	func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndMap() {
+		var nEvents = 0
+		
+		let a = Variable<Int>(0)
+		let b = Variable<Int>(0)
+		let aObs = a.asObservable()
+		_ = aObs
+			.map { 2 * $0 }
+			.bind(to: b)
+		var finalValue = -1
+		let observable = Observable
+			.combineLatest(aObs, b.asObservable(), debounceDependencies: true) { $0 + $1 }
+		_ = observable.subscribe(onNext: { n in
+			finalValue = n
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		a.value = 1
+		runRunLoop()
+		a.value = 2
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 3)
+		XCTAssertEqual(finalValue, 6)
+	}
+	
+	func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndDoubleMap() {
+		var nEvents = 0
+		
+		let a = Variable<Int>(0)
+		let b = Variable<Int>(0)
+		let aObs = a.asObservable()
+		let c = aObs.map { $0 }
+		let d = b.asObservable().map { $0 + 1 }
+		_ = aObs
+			.map { 2 * $0 }
+			.bind(to: b)
+		var finalValue = -1
+		let observable = Observable.combineLatest(c, d, debounceDependencies: true) { $0 + $1 }
+		_ = observable.subscribe(onNext: { n in
+			finalValue = n
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		a.value = 1
+		runRunLoop()
+		a.value = 2
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 3)
+		XCTAssertEqual(finalValue, 7)
+	}
+	
+	func testCombineLatest_DebounceDependenciesSameSourceViaVariableAndDoubleMap2() {
+		var nEvents = 0
+		
+		let a = Variable<Int>(0)
+		let b = Variable<Int>(0)
+		let aObs = a.asObservable()
+		_ = aObs
+			.map { 2 * $0 }
+			.bind(to: b)
+		var finalValue = -1
+		let observable = Observable.combineLatest(aObs.map { $0 }, b.asObservable().map { $0 + 1 },
+		                                          debounceDependencies: true) { $0 + $1 }
+		_ = observable.subscribe(onNext: { n in
+			finalValue = n
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		a.value = 1
+		runRunLoop()
+		a.value = 2
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 3)
+		XCTAssertEqual(finalValue, 7)
+	}
+	
+	func testCombineLatest_DebounceDependenciesSameSourceVeryIndirect() {
+		var nEvents = 0
+		
+		let a = Variable<Int>(0)
+		let b = Variable<Int>(0)
+		let c = Variable<Int>(0)
+		let aObs = a.asObservable()
+		let bObs = b.asObservable()
+		let cObs = c.asObservable()
+		
+		let d = Observable.combineLatest(aObs, bObs) { $0 + $1 }
+		let e = Observable.combineLatest(bObs, cObs) { $0 + $1 }
+		let f = Observable.combineLatest(cObs, aObs) { $0 + $1 }
+		
+		let g = Observable.combineLatest(d.asObservable(), e.asObservable(), debounceDependencies: true) { $0 + $1 }
+		let h = Observable.combineLatest(e.asObservable(), f.asObservable(), debounceDependencies: true) { $0 + $1 }
+		let i = Observable.combineLatest(f.asObservable(), d.asObservable(), debounceDependencies: true) { $0 + $1 }
+		
+		let observable = Observable.combineLatest(g, h, i, debounceDependencies: true) { $0 + $1 + $2 }
+		_ = observable.subscribe(onNext: { n in
+			nEvents += 1
+		})
+		
+		runRunLoop()
+		a.value = 1
+		runRunLoop()
+		b.value = 2
+		runRunLoop()
+		c.value = 3
+		runRunLoop()
+		b.value = 4
+		runRunLoop()
+		a.value = 5
+		runRunLoop()
+		
+		XCTAssertEqual(nEvents, 6)
+	}
+}

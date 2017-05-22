@@ -28,8 +28,9 @@ public final class BehaviorSubject<Element>
         return value
     }
     
-    let _lock = RecursiveLock()
-    
+	let _lock = RecursiveLock()
+	var _source: Observable<Element>?
+	
     // state
     private var _isDisposed = false
     private var _element: Element

@@ -6,6 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
+import Foundation
+
 extension Observable {
     /**
      Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences produces an element.
@@ -15,9 +17,9 @@ extension Observable {
      - parameter resultSelector: Function to invoke whenever any of the sources produces an element.
      - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
      */
-    public static func combineLatest<C: Collection>(_ collection: C, _ resultSelector: @escaping ([C.Iterator.Element.E]) throws -> Element) -> Observable<Element>
+    public static func combineLatest<C: Collection>(_ collection: C, debounceDependencies: Bool = false, _ resultSelector: @escaping ([C.Iterator.Element.E]) throws -> Element) -> Observable<Element>
         where C.Iterator.Element: ObservableType {
-        return CombineLatestCollectionType(sources: collection, resultSelector: resultSelector)
+        return CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: resultSelector)
     }
 
     /**
@@ -27,9 +29,9 @@ extension Observable {
 
      - returns: An observable sequence containing the result of combining elements of the sources.
      */
-    public static func combineLatest<C: Collection>(_ collection: C) -> Observable<[Element]>
+    public static func combineLatest<C: Collection>(_ collection: C, debounceDependencies: Bool = false) -> Observable<[Element]>
         where C.Iterator.Element: ObservableType, C.Iterator.Element.E == Element {
-        return CombineLatestCollectionType(sources: collection, resultSelector: { $0 })
+        return CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: { $0 })
     }
 }
 
@@ -62,7 +64,7 @@ final fileprivate class CombineLatestCollectionTypeSink<C: Collection, O: Observ
             _subscriptions.append(SingleAssignmentDisposable())
         }
         
-        _eraseSubscriptions = (0 ..< parent._count).map { _ in NopDisposable() }
+        _eraseSubscriptions = (0 ..< parent._count).map { _ in Disposables.create() }
         
         super.init(observer: observer, cancel: cancel)
     }

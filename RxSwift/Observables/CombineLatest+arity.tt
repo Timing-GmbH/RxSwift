@@ -6,6 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
+import Foundation
+
 <% for i in 2 ... 8 { %>
 
 // <%= i %>
@@ -38,10 +40,11 @@ extension ObservableType where E == Any {
     - returns: An observable sequence containing the result of combining elements of the sources.
     */
     public static func combineLatest<<%= (Array(1...i).map { "O\($0): ObservableType" }).joined(separator: ", ") %>>
-        (<%= (Array(1...i).map { "_ source\($0): O\($0)" }).joined(separator: ", ") %>)
+        (<%= (Array(1...i).map { "_ source\($0): O\($0)" }).joined(separator: ", ") %>, debounceDependencies: Bool = false)
             -> Observable<(<%= (Array(1...i).map { "O\($0).E" }).joined(separator: ", ") %>)> {
         return CombineLatest<%= i %>(
             <%= (Array(1...i).map { "source\($0): source\($0).asObservable()" }).joined(separator: ", ") %>,
+            debounceDependencies: debounceDependencies,
             resultSelector: { (<%= (Array(0..<i).map { "$\($0)" }).joined(separator: ", ") %>) }
         )
     }

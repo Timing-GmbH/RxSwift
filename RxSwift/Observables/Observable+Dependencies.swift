@@ -111,7 +111,7 @@ class Leaf<SourceType>: Producer<SourceType> {
     }
     
     override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == SourceType {
-		return (sink: NopDisposable(), subscription: Disposables.create(_src.subscribe(observer), cancel))
+		return (sink: Disposables.create(), subscription: Disposables.create(_src.subscribe(observer), cancel))
     }
 }
 
@@ -134,7 +134,7 @@ class IndirectDependency<SourceType, DependencyType>: Producer<SourceType> {
 	}
 	
 	override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == SourceType {
-		return (sink: NopDisposable(), subscription: Disposables.create(_source.subscribe(observer), cancel))
+		return (sink: Disposables.create(), subscription: Disposables.create(_source.subscribe(observer), cancel))
 	}
 }
 

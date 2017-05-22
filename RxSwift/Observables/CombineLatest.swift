@@ -149,11 +149,11 @@ class CombineLatestEraseObserver
 , SynchronizedOnType {
     private let _parent: CombineLatestProtocol
     
-    let _lock: NSRecursiveLock
+    let _lock: RecursiveLock
     private let _index: Int
     private let _this: Disposable
     
-    init(lock: NSRecursiveLock, parent: CombineLatestProtocol, index: Int, this: Disposable) {
+    init(lock: RecursiveLock, parent: CombineLatestProtocol, index: Int, this: Disposable) {
         _lock = lock
         _parent = parent
         _index = index
