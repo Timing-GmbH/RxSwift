@@ -1,19 +1,18 @@
 //
 //  UIPickerView+RxTests.swift
-//  Rx
+//  Tests
 //
 //  Created by Segii Shulga on 5/12/16.
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import RxSwift
 import RxCocoa
 import UIKit
 import XCTest
 
 
-class UIPickerViewTests: RxTest {
+final class UIPickerViewTests: RxTest {
     
     func testTableView_DelegateEventCompletesOnDealloc() {
         let createView: () -> UIPickerView = { UIPickerView(frame: CGRect(x: 0, y: 0, width: 1, height: 1)) }

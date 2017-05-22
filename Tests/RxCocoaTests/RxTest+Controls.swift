@@ -1,20 +1,24 @@
 //
 //  RxTest+Controls.swift
-//  Rx
+//  Tests
 //
 //  Created by Krunoslav Zaher on 3/12/16.
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import RxCocoa
 import RxSwift
 import XCTest
 
 extension RxTest {
     func ensurePropertyDeallocated<C, T: Equatable>(_ createControl: () -> C, _ initialValue: T, _ propertySelector: (C) -> ControlProperty<T>) where C: NSObject {
-        let variable = Variable(initialValue)
 
+        ensurePropertyDeallocated(createControl, initialValue, comparer: ==, propertySelector)
+    }
+
+    func ensurePropertyDeallocated<C, T>(_ createControl: () -> C, _ initialValue: T, comparer: (T, T) -> Bool, _ propertySelector: (C) -> ControlProperty<T>) where C: NSObject  {
+
+        let variable = Variable(initialValue)
 
         var completed = false
         var deallocated = false
@@ -25,7 +29,7 @@ extension RxTest {
 
             let property = propertySelector(control)
 
-            let disposable = variable.asObservable().bindTo(property)
+            let disposable = variable.asObservable().bind(to: property)
 
             _ = property.subscribe(onNext: { n in
                 lastReturnedPropertyValue = n
@@ -55,7 +59,7 @@ extension RxTest {
 
         XCTAssertTrue(deallocated)
         XCTAssertTrue(completed)
-        XCTAssertEqual(initialValue, lastReturnedPropertyValue)
+        XCTAssertTrue(comparer(initialValue, lastReturnedPropertyValue))
     }
 
     func ensureEventDeallocated<C, T>(_ createControl: @escaping () -> C, _ eventSelector: (C) -> ControlEvent<T>) where C: NSObject {
@@ -99,7 +103,7 @@ extension RxTest {
             let propertyObserver = observerSelector(control)
             let observable = observableSelector()
 
-            observable.bindTo(propertyObserver).addDisposableTo(disposeBag)
+            observable.bind(to: propertyObserver).disposed(by: disposeBag)
 
             _ = (control as NSObject).rx.deallocated.subscribe(onNext: { _ in
                 deallocated = true

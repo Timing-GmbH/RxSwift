@@ -6,9 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-#if os(iOS) || os(tvOS) || os(OSX)
+#if os(iOS) || os(tvOS) || os(macOS)
 
-import Foundation
 #if !RX_NO_MODULE
 import RxSwift
 #endif
@@ -18,14 +17,14 @@ import RxSwift
 
     typealias Control = UIKit.UIControl
     typealias ControlEvents = UIKit.UIControlEvents
-#elseif os(OSX)
+#elseif os(macOS)
     import Cocoa
 
     typealias Control = Cocoa.NSControl
 #endif
 
 // This should be only used from `MainScheduler`
-class ControlTarget: RxTarget {
+final class ControlTarget: RxTarget {
     typealias Callback = (Control) -> Void
 
     let selector: Selector = #selector(ControlTarget.eventHandler(_:))
@@ -52,7 +51,7 @@ class ControlTarget: RxTarget {
             rxFatalError("Can't find method")
         }
     }
-#elseif os(OSX)
+#elseif os(macOS)
     init(control: Control, callback: @escaping Callback) {
         MainScheduler.ensureExecutingOnScheduler()
 
@@ -81,7 +80,7 @@ class ControlTarget: RxTarget {
         super.dispose()
 #if os(iOS) || os(tvOS)
         self.control?.removeTarget(self, action: self.selector, for: self.controlEvents)
-#elseif os(OSX)
+#elseif os(macOS)
         self.control?.target = nil
         self.control?.action = nil
 #endif

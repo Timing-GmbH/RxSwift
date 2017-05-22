@@ -1,16 +1,15 @@
 //
 //  NSLayoutConstraint+RxTests.swift
-//  RxTests
+//  Tests
 //
 //  Created by Krunoslav Zaher on 12/6/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import RxSwift
 import RxCocoa
 import XCTest
-#if os(OSX)
+#if os(macOS)
 import Cocoa
 typealias View = NSView
 #else
@@ -18,7 +17,7 @@ import UIKit
 typealias View = UIView
 #endif
 
-class NSLayoutConstraintTest : RxTest {
+final class NSLayoutConstraintTest : RxTest {
 }
 
 

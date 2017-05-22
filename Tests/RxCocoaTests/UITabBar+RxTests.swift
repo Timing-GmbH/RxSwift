@@ -1,6 +1,6 @@
 //
 //  UITabBar+RxTests.swift
-//  Rx
+//  Tests
 //
 //  Created by Jesse Farless on 5/13/16.
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
@@ -8,14 +8,12 @@
 
 #if os(iOS) || os(tvOS)
 
-import Foundation
-
 import RxSwift
 import RxCocoa
 import UIKit
 import XCTest
 
-class UITabBarTests: RxTest {
+final class UITabBarTests: RxTest {
     let createSubject: () -> UITabBar = { UITabBar(frame: CGRect(x: 0, y: 0, width: 1, height: 1)) }
 }
 

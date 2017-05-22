@@ -1,0 +1,137 @@
+//
+//  CombineLatest+arity.swift
+//  RxSwift
+//
+//  Created by Krunoslav Zaher on 4/22/15.
+//  Copyright © 2015 Krunoslav Zaher. All rights reserved.
+//
+
+<% for i in 2 ... 8 { %>
+
+// <%= i %>
+
+extension Observable {
+    /**
+    Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences produces an element.
+
+    - seealso: [combineLatest operator on reactivex.io](http://reactivex.io/documentation/operators/combinelatest.html)
+
+    - parameter resultSelector: Function to invoke whenever any of the sources produces an element.
+    - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
+    */
+    public static func combineLatest<<%= (Array(1...i).map { "O\($0): ObservableType" }).joined(separator: ", ") %>>
+        (<%= (Array(1...i).map { "_ source\($0): O\($0)" }).joined(separator: ", ") %>, debounceDependencies: Bool = false, resultSelector: @escaping (<%= (Array(1...i).map { "O\($0).E" }).joined(separator: ", ") %>) throws -> E)
+            -> Observable<E> {
+        return CombineLatest<%= i %>(
+            <%= (Array(1...i).map { "source\($0): source\($0).asObservable()" }).joined(separator: ", ") %>,
+            debounceDependencies: debounceDependencies, resultSelector: resultSelector
+        )
+    }
+}
+
+extension ObservableType where E == Any {
+    /**
+    Merges the specified observable sequences into one observable sequence of tuples whenever any of the observable sequences produces an element.
+
+    - seealso: [combineLatest operator on reactivex.io](http://reactivex.io/documentation/operators/combinelatest.html)
+
+    - returns: An observable sequence containing the result of combining elements of the sources.
+    */
+    public static func combineLatest<<%= (Array(1...i).map { "O\($0): ObservableType" }).joined(separator: ", ") %>>
+        (<%= (Array(1...i).map { "_ source\($0): O\($0)" }).joined(separator: ", ") %>)
+            -> Observable<(<%= (Array(1...i).map { "O\($0).E" }).joined(separator: ", ") %>)> {
+        return CombineLatest<%= i %>(
+            <%= (Array(1...i).map { "source\($0): source\($0).asObservable()" }).joined(separator: ", ") %>,
+            resultSelector: { (<%= (Array(0..<i).map { "$\($0)" }).joined(separator: ", ") %>) }
+        )
+    }
+}
+
+final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joined(separator: ", ") %>, O: ObserverType> : CombineLatestSink<O> {
+    typealias R = O.E
+    typealias Parent = CombineLatest<%= i %><<%= (Array(1...i).map { "E\($0)" }).joined(separator: ", ") %>, R>
+
+    let _parent: Parent
+
+<%= (Array(1...i).map {
+"    var _latestElement\($0): E\($0)! = nil"
+}).joined(separator: "\n") %>
+
+    init(parent: Parent, observer: O, cancel: Cancelable) {
+        _parent = parent
+        super.init(arity: <%= i %>, observer: observer, cancel: cancel)
+    }
+
+    func run(debounceDependencies: Bool) -> Disposable {
+        var disposables: [Disposable] = []
+        
+        if debounceDependencies {
+            for (index, source) in _parent.observableSources.enumerated() {
+                for leafSource in source.leafSources.deduplicatedByPointer() {
+                    let subscription = SingleAssignmentDisposable()
+                    
+                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
+                    disposables.append(subscription)
+                }
+            }
+        }
+
+<%= (Array(1...i).map {
+"        let subscription\($0) = SingleAssignmentDisposable()"
+}).joined(separator: "\n") %>
+
+<%= (Array(1...i).map {
+"        let observer\($0) = CombineLatestObserver(lock: _lock, parent: self, index: \($0 - 1), setLatestValue: { (e: E\($0)) -> Void in self._latestElement\($0) = e }, this: subscription\($0))"
+}).joined(separator: "\n") %>
+
+        if debounceDependencies {
+            // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
+            // asynchronously rather than run directly.
+            let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
+<%= (Array(1...i).map {
+"            subscription\($0).setDisposable(_parent._source\($0).observeOn(mainScheduler).subscribe(observer\($0)))"
+}).joined(separator: "\n") %>
+        } else {
+<%= (Array(1...i).map {
+"            subscription\($0).setDisposable(_parent._source\($0).subscribe(observer\($0)))"
+}).joined(separator: "\n") %>
+        }
+
+        return Disposables.create(disposables + [
+<%= (Array(1...i).map { "                subscription\($0)" }).joined(separator: ",\n") %>
+        ])
+    }
+
+    override func getResult() throws -> R {
+        return try _parent._resultSelector(<%= (Array(1...i).map { "_latestElement\($0)" }).joined(separator: ", ") %>)
+    }
+}
+
+final class CombineLatest<%= i %><<%= (Array(1...i).map { "E\($0)" }).joined(separator: ", ") %>, R> : Producer<R> {
+    typealias ResultSelector = (<%= (Array(1...i).map { "E\($0)" }).joined(separator: ", ") %>) throws -> R
+
+<%= (Array(1...i).map {
+"    let _source\($0): Observable<E\($0)>"
+}).joined(separator: "\n") %>
+
+    let _debounceDependencies: Bool
+    let _resultSelector: ResultSelector
+
+    init(<%= (Array(1...i).map { "source\($0): Observable<E\($0)>" }).joined(separator: ", ") %>, debounceDependencies: Bool, resultSelector: @escaping ResultSelector) {
+<%= (Array(1...i).map {
+"        _source\($0) = source\($0)"
+}).joined(separator: "\n")  %>
+
+        _debounceDependencies = debounceDependencies
+        _resultSelector = resultSelector
+    }
+
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == R {
+        let sink = CombineLatestSink<%= i %>_(parent: self, observer: observer, cancel: cancel)
+        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        return (sink: sink, subscription: subscription)
+    }
+}
+
+<% } %>

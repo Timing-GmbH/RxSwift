@@ -136,8 +136,6 @@ BOOL RX_is_method_with_description_void(struct objc_method_description method) {
     return strncmp(method.types, @encode(void), 1) == 0;
 }
 
-// inspired by https://github.com/ReactiveCocoa/ReactiveCocoa/blob/swift-development/ReactiveCocoa/Objective-C/NSInvocation%2BRACTypeParsing.m
-// awesome work
 id __nonnull RX_extract_argument_at_index(NSInvocation * __nonnull invocation, NSUInteger index) {
     const char *argumentType = [invocation.methodSignature getArgumentTypeAtIndex:index];
     
@@ -261,10 +259,6 @@ static NSString * __nonnull RX_method_encoding(Method __nonnull method) {
     return encoding;
 }
 
-// inspired by
-// https://github.com/mikeash/MAZeroingWeakRef/blob/master/Source/MAZeroingWeakRef.m
-// https://github.com/ReactiveCocoa/ReactiveCocoa/blob/swift-development/ReactiveCocoa/Objective-C/NSObject%2BRACDeallocating.m
-// https://github.com/steipete/Aspects
 @interface RXObjCRuntime: NSObject
 
 @property (nonatomic, assign) pthread_mutex_t lock;
@@ -295,7 +289,7 @@ replacementImplementationGenerator:(IMP (^)(IMP originalImplementation))replacem
  that every action is properly locked.
  */
 IMP __nullable RX_ensure_observing(id __nonnull target, SEL __nonnull selector, NSError ** __nonnull error) {
-    __block IMP __nonnull targetImplementation = nil;
+    __block IMP targetImplementation = nil;
     // Target is the second object that needs to be synchronized to TRY to make sure other swizzling framework
     // won't do something in parallel.
     // Even though this is too fine grained locking and more coarse grained locks should exist, this is just in case
@@ -371,13 +365,13 @@ IMP __nonnull RX_default_target_implementation() {
 #define EXAMPLE_PARAMETER(_1, index, type)        RX_CAT2(_, type):(type)SEPARATE_BY_UNDERSCORE(type, index)          // generates -> _type:(type)type_0
 #define SELECTOR_PART(_1, index, type)            RX_CAT2(_, type:)                                                   // generates -> _type:
 
-#define COMMA_DELIMITED_ARGUMENTS(...)            RX_FOR(_, SEPARATE_BY_COMMA, NOT_NULL_ARGUMENT_CAT, ## __VA_ARGS__)
-#define ARGUMENTS(...)                            RX_FOR_COMMA(_, NAME_CAT, ## __VA_ARGS__)
-#define DECLARE_ARGUMENTS(...)                    RX_FOR_COMMA(_, TYPE_AND_NAME_CAT, ## __VA_ARGS__)
+#define COMMA_DELIMITED_ARGUMENTS(...)            RX_FOREACH(_, SEPARATE_BY_COMMA, NOT_NULL_ARGUMENT_CAT, ## __VA_ARGS__)
+#define ARGUMENTS(...)                            RX_FOREACH_COMMA(_, NAME_CAT, ## __VA_ARGS__)
+#define DECLARE_ARGUMENTS(...)                    RX_FOREACH_COMMA(_, TYPE_AND_NAME_CAT, ## __VA_ARGS__)
 
 // optimized observe methods
 
-#define GENERATE_METHOD_IDENTIFIER(...)          RX_CAT2(swizzle, RX_FOR(_, CAT, UNDERSCORE_TYPE_CAT, ## __VA_ARGS__))
+#define GENERATE_METHOD_IDENTIFIER(...)          RX_CAT2(swizzle, RX_FOREACH(_, CAT, UNDERSCORE_TYPE_CAT, ## __VA_ARGS__))
 
 #define GENERATE_OBSERVE_METHOD_DECLARATION(...)                                 \
     -(BOOL)GENERATE_METHOD_IDENTIFIER(__VA_ARGS__):(Class __nonnull)class        \
@@ -386,10 +380,10 @@ IMP __nonnull RX_default_target_implementation() {
 
 
 #define BUILD_EXAMPLE_METHOD(return_value, ...) \
-    +(return_value)RX_CAT2(RX_CAT2(example_, return_value), RX_FOR(_, SEPARATE_BY_SPACE, EXAMPLE_PARAMETER, ## __VA_ARGS__)) {}
+    +(return_value)RX_CAT2(RX_CAT2(example_, return_value), RX_FOREACH(_, SEPARATE_BY_SPACE, EXAMPLE_PARAMETER, ## __VA_ARGS__)) {}
 
 #define BUILD_EXAMPLE_METHOD_SELECTOR(return_value, ...) \
-    RX_CAT2(RX_CAT2(example_, return_value), RX_FOR(_, SEPARATE_BY_SPACE, SELECTOR_PART, ## __VA_ARGS__))
+    RX_CAT2(RX_CAT2(example_, return_value), RX_FOREACH(_, SEPARATE_BY_SPACE, SELECTOR_PART, ## __VA_ARGS__))
 
 #define SWIZZLE_OBSERVE_METHOD(return_value, ...)                                                                                                       \
     @interface RXObjCRuntime (GENERATE_METHOD_IDENTIFIER(return_value, ## __VA_ARGS__))                                                                 \
@@ -615,20 +609,18 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
 -(IMP __nullable)ensurePrepared:(id __nonnull)target forObserving:(SEL __nonnull)selector error:(NSError** __nonnull)error {
     Method instanceMethod = class_getInstanceMethod([target class], selector);
     if (instanceMethod == nil) {
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorSelectorNotImplemented
-                                      userInfo:nil]);
-        return nil;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorSelectorNotImplemented
+                                       userInfo:nil], nil);
     }
 
     if (selector == @selector(class)
     ||  selector == @selector(forwardingTargetForSelector:)
     ||  selector == @selector(methodSignatureForSelector:)
     ||  selector == @selector(respondsToSelector:)) {
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorObservingPerformanceSensitiveMessages
-                                      userInfo:nil]);
-        return nil;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorObservingPerformanceSensitiveMessages
+                                       userInfo:nil], nil);
     }
 
     // For `dealloc` message, original implementation will be swizzled.
@@ -663,11 +655,9 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
         RXInterceptWithOptimizedObserver optimizedIntercept = optimizedObserversByMethodEncoding[methodEncoding];
 
         if (!RX_method_has_supported_return_type(instanceMethod)) {
-            RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                              code:RXObjCRuntimeErrorObservingMessagesWithUnsupportedReturnType
-                                          userInfo:nil]);
-
-            return nil;
+            RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                               code:RXObjCRuntimeErrorObservingMessagesWithUnsupportedReturnType
+                                           userInfo:nil], nil);
         }
 
         // optimized interception method
@@ -705,11 +695,9 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
         }
     }
 
-    RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                      code:RXObjCRuntimeErrorUnknown
-                                  userInfo:nil]);
-
-    return nil;
+    RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                       code:RXObjCRuntimeErrorUnknown
+                                   userInfo:nil], nil);
 }
 
 -(Class __nullable)prepareTargetClassForObserving:(id __nonnull)target error:(NSError **__nonnull)error {
@@ -729,10 +717,9 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
     BOOL isThisTollFreeFoundationClass = CFGetTypeID((CFTypeRef)target) != defaultTypeID;
 
     if (isThisTollFreeFoundationClass) {
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorCantInterceptCoreFoundationTollFreeBridgedObjects
-                                      userInfo:nil]);
-        return nil;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorCantInterceptCoreFoundationTollFreeBridgedObjects
+                                       userInfo:nil], nil);
     }
 
     /**
@@ -763,12 +750,11 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
     if ([target class] != object_getClass(target)) {
         BOOL isKVO = [target respondsToSelector:NSSelectorFromString(@"_isKVOA")];
 
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorObjectMessagesAlreadyBeingIntercepted
-                                      userInfo:@{
-                                          RXObjCRuntimeErrorIsKVOKey : @(isKVO)
-                                      }]);
-        return nil;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorObjectMessagesAlreadyBeingIntercepted
+                                       userInfo:@{
+                                                  RXObjCRuntimeErrorIsKVOKey : @(isKVO)
+                                                  }], nil);
     }
 
     Class __nullable dynamicFakeSubclass = [self ensureHasDynamicFakeSubclass:wannaBeClass error:error];
@@ -779,11 +765,10 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
 
     Class previousClass = object_setClass(target, dynamicFakeSubclass);
     if (previousClass != wannaBeClass) {
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorThreadingCollisionWithOtherInterceptionMechanism
-                                      userInfo:nil]);
         THREADING_HAZARD(wannaBeClass);
-        return nil;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorThreadingCollisionWithOtherInterceptionMechanism
+                                       userInfo:nil], nil);
     }
 
     objc_setAssociatedObject(target, &RxSwizzlingTargetClassKey, dynamicFakeSubclass, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -834,27 +819,23 @@ static NSMutableDictionary<NSString *, RXInterceptWithOptimizedObserver> *optimi
     IMP implementation = method_getImplementation(instanceMethod);
 
     if (implementation == nil) {
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorSelectorNotImplemented
-                                      userInfo:nil]);
-
-        return NO;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorSelectorNotImplemented
+                                       userInfo:nil], NO);
     }
 
     if (!class_addMethod(swizzlingImplementorClass, rxSelector, implementation, methodEncoding)) {
-        RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                          code:RXObjCRuntimeErrorSavingOriginalForwardingMethodFailed
-                                      userInfo:nil]);
-        return NO;
+        RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                           code:RXObjCRuntimeErrorSavingOriginalForwardingMethodFailed
+                                       userInfo:nil], NO);
     }
 
     if (!class_addMethod(swizzlingImplementorClass, selector, _objc_msgForward, methodEncoding)) {
         if (implementation != method_setImplementation(instanceMethod, _objc_msgForward)) {
-            RX_SAFE_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
-                                              code:RXObjCRuntimeErrorReplacingMethodWithForwardingImplementation
-                                          userInfo:nil]);
             THREADING_HAZARD(swizzlingImplementorClass);
-            return NO;
+            RX_THROW_ERROR([NSError errorWithDomain:RXObjCRuntimeErrorDomain
+                                               code:RXObjCRuntimeErrorReplacingMethodWithForwardingImplementation
+                                           userInfo:nil], NO);
         }
     }
 

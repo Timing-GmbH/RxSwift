@@ -6,7 +6,6 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 #if !RX_NO_MODULE
 import RxSwift
 import RxCocoa
@@ -76,7 +75,7 @@ public class ActivityIndicator : SharedSequenceConvertibleType {
     }
 }
 
-public extension ObservableConvertibleType {
+extension ObservableConvertibleType {
     public func trackActivity(_ activityIndicator: ActivityIndicator) -> Observable<E> {
         return activityIndicator.trackActivityOfObservable(self)
     }

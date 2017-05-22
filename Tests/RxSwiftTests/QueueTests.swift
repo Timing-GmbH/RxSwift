@@ -1,13 +1,12 @@
 //
 //  QueueTests.swift
-//  Rx
+//  Tests
 //
 //  Created by Krunoslav Zaher on 3/21/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
-import RxSwift
+@testable import RxSwift
 import XCTest
 
 class QueueTest : RxTest {

@@ -1,12 +1,13 @@
 //
 //  SerialDispatchQueueScheduler.swift
-//  Rx
+//  RxSwift
 //
 //  Created by Krunoslav Zaher on 2/8/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
+import struct Foundation.TimeInterval
+import struct Foundation.Date
 import Dispatch
 
 /**
@@ -30,9 +31,7 @@ public class SerialDispatchQueueScheduler : SchedulerType {
     public typealias TimeInterval = Foundation.TimeInterval
     public typealias Time = Date
     
-    /**
-    - returns: Current time.
-    */
+    /// - returns: Current time.
     public var now : Date {
         return Date()
     }
@@ -74,17 +73,16 @@ public class SerialDispatchQueueScheduler : SchedulerType {
     /**
      Constructs new `SerialDispatchQueueScheduler` that wraps on of the global concurrent dispatch queues.
      
-     - parameter globalConcurrentQueueQOS: Identifier for global dispatch queue with specified quality of service class.
+     - parameter qos: Identifier for global dispatch queue with specified quality of service class.
      - parameter internalSerialQueueName: Custom name for internal serial dispatch queue proxy.
      */
     @available(iOS 8, OSX 10.10, *)
-    public convenience init(globalConcurrentQueueQOS: DispatchQueueSchedulerQOS, internalSerialQueueName: String = "rx.global_dispatch_queue.serial", leeway: DispatchTimeInterval = DispatchTimeInterval.nanoseconds(0)) {
-        let priority = globalConcurrentQueueQOS.qos
-        self.init(queue: DispatchQueue.global(qos: priority.qosClass), internalSerialQueueName: internalSerialQueueName, leeway: leeway)
+    public convenience init(qos: DispatchQoS, internalSerialQueueName: String = "rx.global_dispatch_queue.serial", leeway: DispatchTimeInterval = DispatchTimeInterval.nanoseconds(0)) {
+        self.init(queue: DispatchQueue.global(qos: qos.qosClass), internalSerialQueueName: internalSerialQueueName, leeway: leeway)
     }
     
     /**
-    Schedules an action to be executed immediatelly.
+    Schedules an action to be executed immediately.
     
     - parameter state: State passed to the action to be executed.
     - parameter action: Action to be executed.

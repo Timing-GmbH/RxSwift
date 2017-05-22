@@ -1,5 +1,5 @@
 //
-//  UIApplication+Extensions.swift
+//  Application+Extensions.swift
 //  RxExample
 //
 //  Created by Krunoslav Zaher on 8/20/16.
@@ -9,7 +9,7 @@
 #if os(iOS)
     import UIKit
     typealias OSApplication = UIApplication
-#elseif os(OSX)
+#elseif os(macOS)
     import Cocoa
     typealias OSApplication = NSApplication
 #endif

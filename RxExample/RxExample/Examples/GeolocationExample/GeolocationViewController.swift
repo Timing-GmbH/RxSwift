@@ -14,24 +14,9 @@ import CoreLocation
 #endif
 
 private extension Reactive where Base: UILabel {
-    var driveCoordinates: UIBindingObserver<Base, CLLocationCoordinate2D> {
+    var coordinates: UIBindingObserver<Base, CLLocationCoordinate2D> {
         return UIBindingObserver(UIElement: base) { label, location in
             label.text = "Lat: \(location.latitude)\nLon: \(location.longitude)"
-        }
-    }
-}
-
-private extension Reactive where Base: UIView {
-    var driveAuthorization: UIBindingObserver<Base, Bool> {
-        return UIBindingObserver(UIElement: base) { view, authorized in
-            if authorized {
-                view.isHidden = true
-                view.superview?.sendSubview(toBack:view)
-            }
-            else {
-                view.isHidden = false
-                view.superview?.bringSubview(toFront:view)
-            }
         }
     }
 }
@@ -42,35 +27,37 @@ class GeolocationViewController: ViewController {
     @IBOutlet weak private var button: UIButton!
     @IBOutlet weak private var button2: UIButton!
     @IBOutlet weak var label: UILabel!
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.addSubview(noGeolocationView)
+        
         let geolocationService = GeolocationService.instance
-
+        
         geolocationService.authorized
-            .drive(noGeolocationView.rx.driveAuthorization)
-            .addDisposableTo(disposeBag)
+            .drive(noGeolocationView.rx.isHidden)
+            .disposed(by: disposeBag)
         
         geolocationService.location
-            .drive(label.rx.driveCoordinates)
-            .addDisposableTo(disposeBag)
-
+            .drive(label.rx.coordinates)
+            .disposed(by: disposeBag)
+        
         button.rx.tap
-            .bindNext { [weak self] in
+            .bind { [weak self] in
                 self?.openAppPreferences()
             }
-            .addDisposableTo(disposeBag)
+            .disposed(by: disposeBag)
         
         button2.rx.tap
-            .bindNext { [weak self] in
+            .bind { [weak self] in
                 self?.openAppPreferences()
             }
-            .addDisposableTo(disposeBag)
+            .disposed(by: disposeBag)
     }
     
     private func openAppPreferences() {
         UIApplication.shared.openURL(URL(string: UIApplicationOpenSettingsURLString)!)
     }
-
+    
 }

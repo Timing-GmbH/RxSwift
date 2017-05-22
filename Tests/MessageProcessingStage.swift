@@ -1,12 +1,11 @@
 //
 //  MessageProcessingStage.swift
-//  Rx
+//  Tests
 //
 //  Created by Krunoslav Zaher on 10/2/16.
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import RxSwift
 
 enum MessageProcessingStage: Int {

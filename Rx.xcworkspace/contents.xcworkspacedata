@@ -14,14 +14,14 @@
       location = "group:README.md">
    </FileRef>
    <FileRef
-      location = "group:ISSUE_TEMPLATE.md">
-   </FileRef>
-   <FileRef
       location = "group:CHANGELOG.md">
    </FileRef>
    <Group
       location = "container:"
       name = "Podspecs">
+      <FileRef
+         location = "group:RxTest.podspec">
+      </FileRef>
       <FileRef
          location = "group:RxBlocking.podspec">
       </FileRef>
@@ -31,25 +31,10 @@
       <FileRef
          location = "group:RxSwift.podspec">
       </FileRef>
-      <FileRef
-         location = "group:RxTest.podspec">
-      </FileRef>
    </Group>
    <Group
       location = "group:scripts"
       name = "scripts">
-      <FileRef
-         location = "group:release-prep.sh">
-      </FileRef>
-      <FileRef
-         location = "group:spm-build-test.sh">
-      </FileRef>
-      <FileRef
-         location = "group:update-jazzy-config.rb">
-      </FileRef>
-      <FileRef
-         location = "group:update-jazzy-docs.sh">
-      </FileRef>
       <FileRef
          location = "group:all-tests.sh">
       </FileRef>
@@ -79,9 +64,6 @@
       location = "group:Documentation"
       name = "Documentation">
       <FileRef
-         location = "group:API.md">
-      </FileRef>
-      <FileRef
          location = "group:DesignRationale.md">
       </FileRef>
       <FileRef
@@ -92,9 +74,6 @@
       </FileRef>
       <FileRef
          location = "group:HotAndColdObservables.md">
-      </FileRef>
-      <FileRef
-         location = "group:Linux.md">
       </FileRef>
       <FileRef
          location = "group:MathBehindRx.md">
@@ -109,7 +88,7 @@
          location = "group:Subjects.md">
       </FileRef>
       <FileRef
-         location = "group:Units.md">
+         location = "group:Traits.md">
       </FileRef>
       <FileRef
          location = "group:Warnings.md">

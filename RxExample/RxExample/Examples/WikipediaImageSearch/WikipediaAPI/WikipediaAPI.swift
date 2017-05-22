@@ -1,12 +1,11 @@
 //
 //  WikipediaAPI.swift
-//  Example
+//  RxExample
 //
 //  Created by Krunoslav Zaher on 3/25/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 #if !RX_NO_MODULE
 import RxSwift
 import RxCocoa
@@ -35,7 +34,7 @@ class DefaultWikipediaAPI: WikipediaAPI {
 
     private func JSON(_ url: URL) -> Observable<Any> {
         return $.URLSession
-            .rx.JSON(url)
+            .rx.json(url: url)
             .trackActivity(loadingWikipediaData)
     }
 

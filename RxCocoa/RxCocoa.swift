@@ -6,7 +6,8 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
+import class Foundation.NSNull
+
 #if !RX_NO_MODULE
 import RxSwift
 #endif
@@ -14,49 +15,31 @@ import RxSwift
     import UIKit
 #endif
 
-/**
-RxCocoa errors.
-*/
+/// RxCocoa errors.
 public enum RxCocoaError
     : Swift.Error
     , CustomDebugStringConvertible {
-    /**
-    Unknown error has occurred.
-    */
+    /// Unknown error has occurred.
     case unknown
-    /**
-    Invalid operation was attempted.
-    */
+    /// Invalid operation was attempted.
     case invalidOperation(object: Any)
-    /**
-    Items are not yet bound to user interface but have been requested.
-    */
+    /// Items are not yet bound to user interface but have been requested.
     case itemsNotYetBound(object: Any)
-    /**
-    Invalid KVO Path.
-    */
+    /// Invalid KVO Path.
     case invalidPropertyName(object: Any, propertyName: String)
-    /**
-    Invalid object on key path.
-    */
+    /// Invalid object on key path.
     case invalidObjectOnKeyPath(object: Any, sourceObject: AnyObject, propertyName: String)
-    /**
-    Error during swizzling.
-    */
+    /// Error during swizzling.
     case errorDuringSwizzling
-    /*
-     Casting error.
-     */
+    /// Casting error.
     case castingError(object: Any, targetType: Any.Type)
 }
 
 
 // MARK: Debug descriptions
 
-public extension RxCocoaError {
-    /**
-     A textual representation of `self`, suitable for debugging.
-     */
+extension RxCocoaError {
+    /// A textual representation of `self`, suitable for debugging.
     public var debugDescription: String {
         switch self {
         case .unknown:
@@ -90,14 +73,22 @@ func bindingErrorToInterface(_ error: Swift.Error) {
 #endif
 }
 
-// MARK: Abstract methods
-
-func rxAbstractMethodWithMessage(_ message: String) -> Swift.Never  {
-    rxFatalError(message)
+/// Swift does not implement abstract methods. This method is used as a runtime check to ensure that methods which intended to be abstract (i.e., they should be implemented in subclasses) are not called directly on the superclass.
+func rxAbstractMethod(message: String = "Abstract method", file: StaticString = #file, line: UInt = #line) -> Swift.Never {
+    rxFatalError(message, file: file, line: line)
 }
 
-func rxAbstractMethod() -> Swift.Never  {
-    rxFatalError("Abstract method")
+func rxFatalError(_ lastMessage: @autoclosure () -> String, file: StaticString = #file, line: UInt = #line) -> Swift.Never  {
+    // The temptation to comment this line is great, but please don't, it's for your own good. The choice is yours.
+    fatalError(lastMessage(), file: file, line: line)
+}
+
+func rxFatalErrorInDebug(_ lastMessage: @autoclosure () -> String, file: StaticString = #file, line: UInt = #line) {
+    #if DEBUG
+        fatalError(lastMessage(), file: file, line: line)
+    #else
+        print("\(file):\(line): \(lastMessage())")
+    #endif
 }
 
 // MARK: casts or fatal error

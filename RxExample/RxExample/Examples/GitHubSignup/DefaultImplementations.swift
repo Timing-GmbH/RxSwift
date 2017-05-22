@@ -6,11 +6,16 @@
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 #if !RX_NO_MODULE
 import RxSwift
 #endif
 
+import struct Foundation.CharacterSet
+import struct Foundation.URL
+import struct Foundation.URLRequest
+import struct Foundation.NSRange
+import class Foundation.URLSession
+import func Foundation.arc4random
 
 class GitHubDefaultValidationService: GitHubValidationService {
     let API: GitHubAPI
@@ -95,8 +100,8 @@ class GitHubDefaultAPI : GitHubAPI {
         
         let url = URL(string: "https://github.com/\(username.URLEscaped)")!
         let request = URLRequest(url: url)
-        return self.URLSession.rx.response(request)
-            .map { (maybeData, response) in
+        return self.URLSession.rx.response(request: request)
+            .map { (response, _) in
                 return response.statusCode == 404
             }
             .catchErrorJustReturn(false)
@@ -105,9 +110,8 @@ class GitHubDefaultAPI : GitHubAPI {
     func signup(_ username: String, password: String) -> Observable<Bool> {
         // this is also just a mock
         let signupResult = arc4random() % 5 == 0 ? false : true
+        
         return Observable.just(signupResult)
-            .concat(Observable.never())
-            .throttle(0.4, scheduler: MainScheduler.instance)
-            .take(1)
+            .delay(1.0, scheduler: MainScheduler.instance)
     }
 }

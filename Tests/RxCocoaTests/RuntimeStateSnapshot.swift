@@ -1,15 +1,14 @@
 //
 //  RuntimeStateSnapshot.swift
-//  RxTests
+//  Tests
 //
 //  Created by Krunoslav Zaher on 11/27/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import XCTest
 
-class ObjectRuntimeState {
+final class ObjectRuntimeState {
     let real: ClassRuntimeState
     let actingAs: ClassRuntimeState
 

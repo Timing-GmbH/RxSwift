@@ -1,16 +1,17 @@
 //
 //  BagTest.swift
-//  RxTests
+//  Tests
 //
 //  Created by Krunoslav Zaher on 8/23/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
+// testable import doesn't work well in Linux
+#if !os(Linux)
 import XCTest
 @testable import RxSwift
 
-class BagTest : RxTest {
+final class BagTest : RxTest {
     override var accumulateStatistics: Bool {
         return false
     }
@@ -51,8 +52,8 @@ extension BagTest {
                 )
                 numberOfActionsAfter(i,
                     deletionsFromStart: j,
-                    createNew: { () -> AnyObserver<Int> in AnyObserver { _ in numberObservers += 1 } },
-                    bagAction: { (bag: RxMutableBox<Bag<AnyObserver<Int>>>) in bag.value.on(.next(1)); XCTAssertTrue(bag.value.count == i - j) }
+                    createNew: { () -> (Event<Int>) -> () in { _ in numberObservers += 1 } },
+                    bagAction: { (bag: RxMutableBox<Bag<(Event<Int>) -> ()>>) in dispatch(bag.value, .next(1)); XCTAssertTrue(bag.value.count == i - j) }
                 )
                 numberOfActionsAfter(i,
                     deletionsFromStart: j,
@@ -98,8 +99,8 @@ extension BagTest {
                 )
                 numberOfActionsAfter(i,
                     deletionsFromStart: j,
-                    createNew: { () -> AnyObserver<Int> in AnyObserver { _ in numberObservers += 1 } },
-                    bagAction: { (bag: RxMutableBox<Bag<AnyObserver<Int>>>) in bag.value.on(.next(1)); XCTAssertTrue(bag.value.count == i - j) }
+                    createNew: { () -> (Event<Int>) -> () in { _ in numberObservers += 1 } },
+                    bagAction: { (bag: RxMutableBox<Bag<(Event<Int>) -> ()>>) in dispatch(bag.value, .next(1)); XCTAssertTrue(bag.value.count == i - j) }
                 )
                 numberOfActionsAfter(i,
                     deletionsFromStart: j,
@@ -121,7 +122,7 @@ extension BagTest {
             var increment3 = 0
 
             let bag1 = RxMutableBox(Bag<DoSomething>())
-            let bag2 = RxMutableBox(Bag<AnyObserver<Int>>())
+            let bag2 = RxMutableBox(Bag<(Event<Int>) -> ()>())
             let bag3 = RxMutableBox(Bag<Disposable>())
 
             for _ in 0 ..< 50 {
@@ -131,7 +132,7 @@ extension BagTest {
                     }
                     increment1 += 1
                 })
-                _ = bag2.value.insert(AnyObserver { _ in
+                _ = bag2.value.insert({ _ in
                     if increment2 == breakAt {
                         bag2.value.removeAll()
                     }
@@ -150,7 +151,7 @@ extension BagTest {
                     c()
                 }
 
-                bag2.value.on(.next(1))
+                dispatch(bag2.value, .next(1))
 
                 disposeAll(in: bag3.value)
             }
@@ -171,8 +172,8 @@ extension BagTest {
         )
         numberOfActionsAfter(100,
             deletionsFromStart: 0,
-            createNew: { () -> AnyObserver<Int> in AnyObserver { _ in numberObservers += 1 } },
-            bagAction: { (bag: RxMutableBox<Bag<AnyObserver<Int>>>) in bag.value.removeAll(); bag.value.on(.next(1)); }
+            createNew: { () -> (Event<Int>) -> () in { _ in numberObservers += 1 } },
+            bagAction: { (bag: RxMutableBox<Bag<(Event<Int>) -> ()>>) in bag.value.removeAll(); dispatch(bag.value, .next(1)); }
         )
         numberOfActionsAfter(100,
             deletionsFromStart: 0,
@@ -219,3 +220,4 @@ extension BagTest {
         }
     }
 }
+#endif

@@ -1,12 +1,11 @@
 //
 //  PublishSubjectTest.swift
-//  Rx
+//  Tests
 //
 //  Created by Ryszkiewicz Peter, US-204 on 5/18/16.
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import XCTest
 import RxSwift
 import RxTest

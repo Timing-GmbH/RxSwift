@@ -16,23 +16,25 @@ This project tries to be consistent with [ReactiveX.io](http://reactivex.io/). T
 1. [Debugging Compile Errors](#debugging-compile-errors)
 1. [Debugging](#debugging)
 1. [Debugging memory leaks](#debugging-memory-leaks)
+1. [Enabling Debug Mode](#enabling-debug-mode)
 1. [KVO](#kvo)
 1. [UI layer tips](#ui-layer-tips)
 1. [Making HTTP requests](#making-http-requests)
 1. [RxDataSources](#rxdatasources)
-1. [Driver](Units.md#driver-unit)
+1. [Driver](Traits.md#driver)
+1. [Traits: Driver, Single, Maybe, Completable](Traits.md)
 1. [Examples](Examples.md)
 
 # Observables aka Sequences
 
 ## Basics
-The [equivalence](MathBehindRx.md) of observer pattern (`Observable<Element>` sequence) and normal sequences (`SequenceType`) is the most important thing to understand about Rx.
+The [equivalence](MathBehindRx.md) of observer pattern (`Observable<Element>` sequence) and normal sequences (`Sequence`) is the most important thing to understand about Rx.
 
-**Every `Observable` sequence is just a sequence. The key advantage for an `Observable` vs Swift's `SequenceType` is that it can also receive elements asynchronously. This is the kernel of the RxSwift, documentation from here is about ways that we expand on that idea.**
+**Every `Observable` sequence is just a sequence. The key advantage for an `Observable` vs Swift's `Sequence` is that it can also receive elements asynchronously. This is the kernel of the RxSwift, documentation from here is about ways that we expand on that idea.**
 
-* `Observable`(`ObservableType`) is equivalent to `SequenceType`
-* `ObservableType.subscribe` method is equivalent to `SequenceType.generate` method.
-* Observer (callback) needs to be passed to `ObservableType.subscribe` method to receive sequence elements instead of calling `next()` on the returned generator.
+* `Observable`(`ObservableType`) is equivalent to `Sequence`
+* `ObservableType.subscribe` method is equivalent to `Sequence.makeIterator` method.
+* Observer (callback) needs to be passed to `ObservableType.subscribe` method to receive sequence elements instead of calling `next()` on the returned iterator.
 
 Sequences are a simple, familiar concept that is **easy to visualize**.
 
@@ -40,7 +42,7 @@ People are creatures with huge visual cortexes. When we can visualize a concept 
 
 We can lift a lot of the cognitive load from trying to simulate event state machines inside every Rx operator onto high level operations over sequences.
 
-If we don't use Rx but model asynchronous systems, that probably means that our code is full of state machines and transient states that we need to simulate instead of abstracting away.
+If we don't use Rx but model asynchronous systems, that probably means our code is full of state machines and transient states that we need to simulate instead of abstracting away.
 
 Lists and sequences are probably one of the first concepts mathematicians and programmers learn.
 
@@ -57,7 +59,7 @@ Another sequence, with characters:
 --a--b--a--a--a---d---X // terminates with error
 ```
 
-Some sequences are finite and others are infinite, like a sequence of button taps:
+Some sequences are finite while others are infinite, like a sequence of button taps:
 
 ```
 ---tap-tap-------tap--->
@@ -96,13 +98,13 @@ protocol ObserverType {
 
 **To cancel production of sequence elements and free resources immediately, call `dispose` on the returned subscription.**
 
-If a sequence terminates in finite time, not calling `dispose` or not using `addDisposableTo(disposeBag)` won't cause any permanent resource leaks. However, those resources will be used until the sequence completes, either by finishing production of elements or returning an error.
+If a sequence terminates in finite time, not calling `dispose` or not using `disposed(by: disposeBag)` won't cause any permanent resource leaks. However, those resources will be used until the sequence completes, either by finishing production of elements or returning an error.
 
-If a sequence does not terminate in some way, resources will be allocated permanently unless `dispose` is called manually, automatically inside of a `disposeBag`, `takeUntil` or in some other way.
+If a sequence does not terminate on its own, such as with a series of button taps, resources will be allocated permanently unless `dispose` is called manually, automatically inside of a `disposeBag`, with the `takeUntil` operator, or in some other way.
 
 **Using dispose bags or `takeUntil` operator is a robust way of making sure resources are cleaned up. We recommend using them in production even if the sequences will terminate in finite time.**
 
-In case you are curious why `Swift.Error` isn't generic, you can find explanation [here](DesignRationale.md#why-error-type-isnt-generic).
+If you are curious why `Swift.Error` isn't generic, you can find the explanation [here](DesignRationale.md#why-error-type-isnt-generic).
 
 ## Disposing
 
@@ -111,15 +113,15 @@ There is one additional way an observed sequence can terminate. When we are done
 Here is an example with the `interval` operator.
 
 ```swift
+let scheduler = SerialDispatchQueueScheduler(qos: .default)
 let subscription = Observable<Int>.interval(0.3, scheduler: scheduler)
     .subscribe { event in
         print(event)
     }
 
-NSThread.sleep(forTimeInterval: 2.0)
+Thread.sleep(forTimeInterval: 2.0)
 
 subscription.dispose()
-
 ```
 
 This will print:
@@ -133,11 +135,11 @@ This will print:
 5
 ```
 
-Note that you usually do not want to manually call `dispose`; this is only educational example. Calling dispose manually is usually a bad code smell. There are better ways to dispose subscriptions. We can use `DisposeBag`, the `takeUntil` operator, or some other mechanism.
+Note that you usually do not want to manually call `dispose`; this is only an educational example. Calling dispose manually is usually a bad code smell. There are better ways to dispose of subscriptions such as `DisposeBag`, the `takeUntil` operator, or some other mechanism.
 
-So can this code print something after the `dispose` call executed? The answer is: it depends.
+So can this code print something after the `dispose` call is executed? The answer is: it depends.
 
-* If the `scheduler` is a **serial scheduler** (ex. `MainScheduler`) and `dispose` is called on **on the same serial scheduler**, the answer is **no**.
+* If the `scheduler` is a **serial scheduler** (ex. `MainScheduler`) and `dispose` is called **on the same serial scheduler**, the answer is **no**.
 
 * Otherwise it is **yes**.
 
@@ -146,7 +148,7 @@ You can find out more about schedulers [here](Schedulers.md).
 You simply have two processes happening in parallel.
 
 * one is producing elements
-* the other is disposing the subscription
+* the other is disposing of the subscription
 
 The question "Can something be printed after?" does not even make sense in the case that those processes are on different schedulers.
 
@@ -233,7 +235,7 @@ someObservable
   }
 ```
 
-this will always print:
+This will always print:
 
 ```
 Event processing started
@@ -244,7 +246,7 @@ Event processing started
 Event processing ended
 ```
 
-it can never print:
+It can never print:
 
 ```
 Event processing started
@@ -261,7 +263,7 @@ There is one crucial thing to understand about observables.
 
 It is true that `Observable` can generate elements in many ways. Some of them cause side effects and some of them tap into existing running processes like tapping into mouse events, etc.
 
-**But if you just call a method that returns an `Observable`, no sequence generation is performed, and there are no side effects. `Observable` is just a definition how the sequence is generated and what parameters are used for element generation. Sequence generation starts when `subscribe` method is called.**
+**However, if you just call a method that returns an `Observable`, no sequence generation is performed and there are no side effects. `Observable` just defines how the sequence is generated and what parameters are used for element generation. Sequence generation starts when `subscribe` method is called.**
 
 E.g. Let's say you have a method with similar prototype:
 
@@ -282,14 +284,14 @@ let cancel = searchForMe
 
 ```
 
-There are a lot of ways how you can create your own `Observable` sequence. Probably the easiest way is using `create` function.
+There are a lot of ways to create your own `Observable` sequence. The easiest way is probably to use the `create` function.
 
-Let's create a function which creates a sequence that returns one element upon subscription. That function is called 'just'.
+Let's write a function that creates a sequence which returns one element upon subscription. That function is called 'just'.
 
 *This is the actual implementation*
 
 ```swift
-func myJust<E>(element: E) -> Observable<E> {
+func myJust<E>(_ element: E) -> Observable<E> {
     return Observable.create { observer in
         observer.on(.next(element))
         observer.on(.completed)
@@ -303,7 +305,7 @@ myJust(0)
     })
 ```
 
-this will print:
+This will print:
 
 ```
 0
@@ -322,7 +324,7 @@ Lets now create an observable that returns elements from an array.
 *This is the actual implementation*
 
 ```swift
-func myFrom<E>(sequence: [E]) -> Observable<E> {
+func myFrom<E>(_ sequence: [E]) -> Observable<E> {
     return Observable.create { observer in
         for element in sequence {
             observer.on(.next(element))
@@ -457,7 +459,7 @@ subscription2.dispose()
 print("Ended ----")
 ```
 
-this would print:
+This would print:
 
 ```
 Started ----
@@ -522,7 +524,7 @@ subscription2.dispose()
 print("Ended ----")
 ```
 
-this will print
+This will print
 
 ```
 Started ----
@@ -555,7 +557,7 @@ This is how HTTP requests are wrapped in Rx. It's pretty much the same pattern l
 
 ```swift
 extension Reactive where Base: URLSession {
-    public func response(_ request: NSURLRequest) -> Observable<(Data, HTTPURLResponse)> {
+    public func response(_ request: URLRequest) -> Observable<(Data, HTTPURLResponse)> {
         return Observable.create { observer in
             let task = self.dataTaskWithRequest(request) { (data, response, error) in
                 guard let response = response, let data = data else {
@@ -584,17 +586,15 @@ extension Reactive where Base: URLSession {
 
 ## Operators
 
-There are numerous operators implemented in RxSwift. The complete list can be found [here](API.md).
+There are numerous operators implemented in RxSwift.
 
 Marble diagrams for all operators can be found on [ReactiveX.io](http://reactivex.io/)
 
 Almost all operators are demonstrated in [Playgrounds](../Rx.playground).
 
-To use playgrounds please open `Rx.xcworkspace`, build `RxSwift-OSX` scheme and then open playgrounds in `Rx.xcworkspace` tree view.
+To use playgrounds please open `Rx.xcworkspace`, build `RxSwift-macOS` scheme and then open playgrounds in `Rx.xcworkspace` tree view.
 
 In case you need an operator, and don't know how to find it there a [decision tree of operators](http://reactivex.io/documentation/operators.html#tree).
-
-[Supported RxSwift operators](API.md#rxswift-supported-operators) are also grouped by function they perform, so that can also help.
 
 ### Custom operators
 
@@ -610,7 +610,7 @@ Lets see how an unoptimized map operator can be implemented.
 
 ```swift
 extension ObservableType {
-    func myMap<R>(transform: E -> R) -> Observable<R> {
+    func myMap<R>(transform: @escaping (E) -> R) -> Observable<R> {
         return Observable.create { observer in
             let subscription = self.subscribe { e in
                     switch e {
@@ -642,7 +642,7 @@ let subscription = myInterval(0.1)
     })
 ```
 
-and this will print
+This will print:
 
 ```
 Subscribed
@@ -671,7 +671,7 @@ This isn't something that should be practiced often, and is a bad code smell, bu
     .subscribe(onNext: { being in     // exit the Rx monad  
         self.doSomeStateMagic(being)
     })
-    .addDisposableTo(disposeBag)
+    .disposed(by: disposeBag)
 
   //
   //  Mess
@@ -694,23 +694,23 @@ This isn't something that should be practiced often, and is a bad code smell, bu
     // ....
 ```
 
-Every time you do this, somebody will probably write this code somewhere
+Every time you do this, somebody will probably write this code somewhere:
 
 ```swift
   kittens
     .subscribe(onNext: { kitten in
       // so something with kitten
     })
-    .addDisposableTo(disposeBag)
+    .disposed(by: disposeBag)
 ```
 
-so please try not to do this.
+So please try not to do this.
 
 ## Playgrounds
 
 If you are unsure how exactly some of the operators work, [playgrounds](../Rx.playground) contain almost all of the operators already prepared with small examples that illustrate their behavior.
 
-**To use playgrounds please open Rx.xcworkspace, build RxSwift-OSX scheme and then open playgrounds in Rx.xcworkspace tree view.**
+**To use playgrounds please open Rx.xcworkspace, build RxSwift-macOS scheme and then open playgrounds in Rx.xcworkspace tree view.**
 
 **To view the results of the examples in the playgrounds, please open the `Assistant Editor`. You can open `Assistant Editor` by clicking on `View > Assistant Editor > Show Assistant Editor`**
 
@@ -761,7 +761,7 @@ images = word
     .filter { (s: String) -> Bool in s.containsString("important") }
     .flatMap { (word: String) -> Observable<JSON> in
         return self.api.loadFlickrFeed("karate")
-            .catchError { (error: NSError) -> Observable<JSON> in
+            .catchError { (error: Error) -> Observable<JSON> in
                 return just(JSON(1))
             }
       }
@@ -787,7 +787,7 @@ let subscription = myInterval(0.1)
         print(n)
     })
 
-NSThread.sleepForTimeInterval(0.5)
+Thread.sleepForTimeInterval(0.5)
 
 subscription.dispose()
 ```
@@ -840,19 +840,26 @@ extension ObservableType {
  }
  ```
 
+### Enabling Debug Mode
+In order to [Debug memory leaks using `RxSwift.Resources`](#debugging-memory-leaks) or [Log all HTTP requests automatically](#logging-http-traffic), you have to enable Debug Mode.
+
+In order to enable debug mode, a `TRACE_RESOURCES` flag must be added to the RxSwift target build settings, under _Other Swift Flags_. 
+
+For further discussion and instructions on how to set the `TRACE_RESOURCES` flag for Cocoapods & Carthage, see [#378](https://github.com/ReactiveX/RxSwift/issues/378)
+
 ## Debugging memory leaks
 
-In debug mode Rx tracks all allocated resources in a global variable `resourceCount`.
+In debug mode Rx tracks all allocated resources in a global variable `Resources.total`.
 
-In case you want to have some resource leak detection logic, the simplest method is just printing out `RxSwift.resourceCount` periodically to output.
+In case you want to have some resource leak detection logic, the simplest method is just printing out `RxSwift.Resources.total` periodically to output.
 
 ```swift
     /* add somewhere in
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]? = nil)
     */
     _ = Observable<Int>.interval(1, scheduler: MainScheduler.instance)
         .subscribe(onNext: { _ in
-            print("Resource count \(RxSwift.resourceCount)")
+            print("Resource count \(RxSwift.Resources.total)")
         })
 ```
 
@@ -1004,7 +1011,7 @@ KVO is an Objective-C mechanism so it relies heavily on `NSValue`.
 
 When observing some other structures it is necessary to extract those structures from `NSValue` manually.
 
-[Here](../RxCocoa/Common/KVORepresentable+CoreGraphics.swift) are examples how to extend KVO observing mechanism and `rx.observe*` methods for other structs by implementing `KVORepresentable` protocol.
+[Here](../RxCocoa/Foundation/KVORepresentable+CoreGraphics.swift) are examples how to extend KVO observing mechanism and `rx.observe*` methods for other structs by implementing `KVORepresentable` protocol.
 
 ## UI layer tips
 
@@ -1064,16 +1071,17 @@ Request determines is it a GET request, or a POST request, what is the request b
 This is how you can create a simple GET request
 
 ```swift
-let request = NSURLRequest(URL: NSURL(string: "http://en.wikipedia.org/w/api.php?action=parse&page=Pizza&format=json")!)
+let req = URLRequest(url: NSURL(string: "http://en.wikipedia.org/w/api.php?action=parse&page=Pizza&format=json"))
 ```
 
 If you want to just execute that request outside of composition with other observables, this is what needs to be done.
 
 ```swift
-let responseJSON = NSURLSession.sharedSession().rx.JSON(request)
+let responseJSON = URLSession.shared.rx.json(request: req)
 
 // no requests will be performed up to this point
 // `responseJSON` is just a description how to fetch the response
+
 
 let cancelRequest = responseJSON
     // this will fire the request
@@ -1081,22 +1089,22 @@ let cancelRequest = responseJSON
         print(json)
     })
 
-NSThread.sleep(forTimeInterval: 3.0)
+Thread.sleep(forTimeInterval: 3.0)
 
 // if you want to cancel request after 3 seconds have passed just call
 cancelRequest.dispose()
 
 ```
 
-**NSURLSession extensions don't return result on `MainScheduler` by default.**
+**URLSession extensions don't return result on `MainScheduler` by default.**
 
 In case you want a more low level access to response, you can use:
 
 ```swift
-NSURLSession.shared.rx.response(myNSURLRequest)
+URLSession.shared.rx.response(myNSURLRequest)
     .debug("my request") // this will print out information to console
-    .flatMap { (data: NSData!, response: NSURLResponse!) -> Observable<String> in
-        if let response = response as? NSHTTPURLResponse {
+    .flatMap { (data: NSData, response: URLResponse) -> Observable<String> in
+        if let response = response as? HTTPURLResponse {
             if 200 ..< 300 ~= response.statusCode {
                 return just(transform(data))
             }
@@ -1120,7 +1128,7 @@ In debug mode RxCocoa will log all HTTP request to console by default. In case y
 ```swift
 // read your own configuration
 public struct Logging {
-    public typealias LogURLRequest = (NSURLRequest) -> Bool
+    public typealias LogURLRequest = (URLRequest) -> Bool
 
     public static var URLRequests: LogURLRequest =  { _ in
     #if DEBUG

@@ -1,4 +1,4 @@
-import Foundation
+import Dispatch
 
 /**
  Encloses each code example in its own scope. Prints a `description` header and then executes the `action` closure.
@@ -26,8 +26,7 @@ public enum TestError: Swift.Error {
  */
 public func delay(_ delay: Double, closure: @escaping (Void) -> Void) {
 
-    let delayTime = DispatchTime.now() + DispatchTimeInterval.seconds(Int(delay))
-    DispatchQueue.main.asyncAfter(deadline: delayTime) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
         closure()
     }
 }

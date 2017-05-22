@@ -1,6 +1,6 @@
 //
 //  RxTest.swift
-//  RxTests
+//  Tests
 //
 //  Created by Krunoslav Zaher on 2/8/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
@@ -9,20 +9,28 @@
 import XCTest
 import RxSwift
 import RxTest
-import Foundation
+
+import struct Foundation.TimeInterval
+import struct Foundation.Date
+
+import class Foundation.RunLoop
+
+#if os(Linux)
+    import Foundation
+#endif
 
 #if TRACE_RESOURCES
 #elseif RELEASE
-#elseif os(OSX) || os(iOS) || os(tvOS) || os(watchOS)
+#elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 #elseif os(Linux)
 #else
 let failure = unhandled_case()
 #endif
 
-// because otherwise OSX unit tests won't run
+// because otherwise macOS unit tests won't run
 #if os(iOS)
     import UIKit
-#elseif os(OSX)
+#elseif os(macOS)
     import AppKit
 #endif
 
@@ -39,7 +47,9 @@ func getMemoryInfo() -> (bytes: Int64, allocations: Int64) {
 class RxTest
     : XCTestCase {
 
-    fileprivate var startResourceCount: AtomicInt = 0
+#if TRACE_RESOURCES
+    fileprivate var startResourceCount: Int32 = 0
+#endif
 
     var accumulateStatistics: Bool {
         return true
@@ -78,7 +88,7 @@ extension RxTest {
 
     func setUpActions(){
         #if TRACE_RESOURCES
-            self.startResourceCount = resourceCount
+            self.startResourceCount = Resources.total
             //registerMallocHooks()
             (startNumberOfAllocatedBytes, startNumberOfAllocations) = getMemoryInfo()
         #endif
@@ -88,7 +98,7 @@ extension RxTest {
         #if TRACE_RESOURCES
             // give 5 sec to clean up resources
             for _ in 0..<30 {
-                if self.startResourceCount < resourceCount {
+                if self.startResourceCount < Resources.total {
                     // main schedulers need to finish work
                     print("Waiting for resource cleanup ...")
                     RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: Date(timeIntervalSinceNow: 0.05)  )
@@ -98,7 +108,7 @@ extension RxTest {
                 }
             }
 
-            XCTAssertEqual(self.startResourceCount, resourceCount)
+            XCTAssertEqual(self.startResourceCount, Resources.total)
             let (endNumberOfAllocatedBytes, endNumberOfAllocations) = getMemoryInfo()
 
             let (newBytes, newAllocations) = (endNumberOfAllocatedBytes - startNumberOfAllocatedBytes, endNumberOfAllocations - startNumberOfAllocations)
@@ -110,28 +120,5 @@ extension RxTest {
             print("allocatedBytes = \(newBytes), allocations = \(newAllocations) (totalBytes = \(RxTest.totalNumberOfAllocatedBytes), totalAllocations = \(RxTest.totalNumberOfAllocations))")
         #endif
     }
-
 }
 
-#if os(OSX) || os(iOS) || os(tvOS) || os(watchOS)
-    typealias AtomicInt = Int32
-    let AtomicIncrement = OSAtomicIncrement32Barrier
-    let AtomicDecrement = OSAtomicDecrement32Barrier
-#elseif os(Linux)
-    typealias AtomicInt = Int64
-    func AtomicIncrement(_ increment: UnsafeMutablePointer<AtomicInt>) -> AtomicInt {
-        increment.pointee = increment.pointee + 1
-        return increment.pointee
-    }
-
-    func AtomicDecrement(_ increment: UnsafeMutablePointer<AtomicInt>) -> AtomicInt {
-        increment.pointee = increment.pointee - 1
-        return increment.pointee
-    }
-
-    func autoreleasepool<T>(_ action: () -> T) -> T {
-        return action()
-    }
-#else
-    let error = fatalError("wot")
-#endif

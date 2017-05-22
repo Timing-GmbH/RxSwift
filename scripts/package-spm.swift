@@ -31,32 +31,47 @@ let allowedExtensions = [
 ]
 // Those tests are dependent on conditional compilation logic and it's hard to handle them automatically
 // They usually test some internal state, so it should be ok to exclude them for now.
-let excludedTests = [
+let excludedTests: [String] = [
     "testConcat_TailRecursionCollection",
     "testConcat_TailRecursionSequence",
     "testMapCompose_OptimizationIsPerformed",
     "testMapCompose_OptimizationIsNotPerformed",
     "testObserveOn_EnsureCorrectImplementationIsChosen",
     "testObserveOnDispatchQueue_EnsureCorrectImplementationIsChosen",
-    "testWindowWithTimeOrCount_BasicPeriod",
-    "testObserveOnDispatchQueue_DispatchQueueSchedulerIsSerial",
     "testResourceLeaksDetectionIsTurnedOn",
-    "testAnonymousObservable_disposeReferenceDoesntRetainObservable"
+    "testAnonymousObservable_disposeReferenceDoesntRetainObservable",
+    "testObserveOnDispatchQueue_DispatchQueueSchedulerIsSerial",
+    "ReleasesResourcesOn",
+    "testShareReplayLatestWhileConnectedDisposableDoesntRetainAnything",
+    "testSingle_DecrementCountsFirst",
+    "testSinglePredicate_DecrementCountsFirst",
+    "testLockUnlockCountsResources"
 ]
 
-let excludedTestClasses = [
-    "ObservableConcurrentSchedulerConcurrencyTest",
+func excludeTest(_ name: String) -> Bool {
+    for exclusion in excludedTests {
+        if name.contains(exclusion) {
+            return true
+        }
+    }
+
+    return false
+}
+
+let excludedTestClasses: [String] = [
+    /*"ObservableConcurrentSchedulerConcurrencyTest",
     "SubjectConcurrencyTest",
     "VirtualSchedulerTest",
-    "HistoricalSchedulerTest"
+    "HistoricalSchedulerTest"*/
+    "BagTest"
 ]
 
-let throwingWordsInTests = [
-    "error",
+let throwingWordsInTests: [String] = [
+    /*"error",
     "fail",
     "throw",
     "retrycount",
-    "retrywhen",
+    "retrywhen",*/
 ]
 
 func isExtensionAllowed(_ path: String) -> Bool {
@@ -161,7 +176,7 @@ func buildAllTestsTarget(_ testsPath: String) throws {
             let methodNameRanges = methodMatches.map { $0.rangeAt(1) }
             let testMethodNames = methodNameRanges
                 .map { classCode.substring(with: $0) }
-                .filter { !excludedTests.contains($0) }
+                .filter { !excludeTest($0) }
 
             if testMethodNames.count == 0 {
                 continue
@@ -179,7 +194,7 @@ func buildAllTestsTarget(_ testsPath: String) throws {
     mainContent.append("import RxSwift")
     mainContent.append("")
     mainContent.append("protocol RxTestCase {")
-    mainContent.append("#if os(OSX)")
+    mainContent.append("#if os(macOS)")
     mainContent.append("    init()")
     mainContent.append("    static var allTests: [(String, (Self) -> () -> ())] { get }")
     mainContent.append("#endif")
@@ -191,14 +206,14 @@ func buildAllTestsTarget(_ testsPath: String) throws {
     for (name, methods) in reducedMethods {
 
         mainContent.append("")
-        mainContent.append("final class \(name)_Sub : \(name), RxTestCase {")
-        mainContent.append("    #if os(OSX)")
+        mainContent.append("final class \(name)_ : \(name), RxTestCase {")
+        mainContent.append("    #if os(macOS)")
         mainContent.append("    required override init() {")
         mainContent.append("        super.init()")
         mainContent.append("    }")
         mainContent.append("    #endif")
         mainContent.append("")
-        mainContent.append("    static var allTests: [(String, (\(name)_Sub) -> () -> ())] { return [")
+        mainContent.append("    static var allTests: [(String, (\(name)_) -> () -> ())] { return [")
         for method in methods {
             // throwing error on Linux, you will crash
             let isTestCaseHandlingError = throwingWordsInTests.map { (method as String).lowercased().contains($0) }.reduce(false) { $0 || $1 }
@@ -208,7 +223,7 @@ func buildAllTestsTarget(_ testsPath: String) throws {
         mainContent.append("}")
     }
 
-    mainContent.append("#if os(OSX) || os(iOS) || os(tvOS) || os(watchOS)")
+    mainContent.append("#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)")
     mainContent.append("")
     mainContent.append("func testCase<T: RxTestCase>(_ tests: [(String, (T) -> () -> ())]) -> () -> () {")
     mainContent.append("    return {")
@@ -235,7 +250,7 @@ func buildAllTestsTarget(_ testsPath: String) throws {
     mainContent.append("")
     mainContent.append("    XCTMain([")
     for testCase in reducedMethods.keys {
-        mainContent.append("        testCase(\(testCase)_Sub.allTests),")
+        mainContent.append("        testCase(\(testCase)_.allTests),")
     }
     mainContent.append("    ])")
     mainContent.append("//}")
@@ -247,15 +262,16 @@ func buildAllTestsTarget(_ testsPath: String) throws {
 
 
 try packageRelativePath(["RxSwift"], targetDirName: "RxSwift")
-//try packageRelativePath(["RxCocoa/Common", "RxCocoa/OSX", "RxCocoa/RxCocoa.h"], targetDirName: "RxCocoa")
+//try packageRelativePath(["RxCocoa/Common", "RxCocoa/macOS", "RxCocoa/RxCocoa.h"], targetDirName: "RxCocoa")
 
 try packageRelativePath([
     "RxCocoa/RxCocoa.swift",
-    "RxCocoa/CocoaUnits",
+    "RxCocoa/Traits",
     "RxCocoa/Common",
     "RxCocoa/Foundation",
     "RxCocoa/iOS",
-    "RxCocoa/OSX",
+    "RxCocoa/macOS",
+    "RxCocoa/Platform",
     ], targetDirName: "RxCocoa")
 try packageRelativePath([
     "RxCocoa/Runtime/include",
@@ -272,17 +288,23 @@ try packageRelativePath(["RxTest"], targetDirName: "RxTest")
 // It doesn't work under `Tests` subpath ¯\_(ツ)_/¯
 try packageRelativePath([
         "Tests/RxSwiftTests",
+        "Tests/RxBlockingTests",
         "RxSwift/RxMutableBox.swift",
         "Tests/RxTest.swift",
-        "Tests/Foundation+Extensions.swift",
         "Tests/Recorded+Timeless.swift",
         "Tests/TestErrors.swift",
         "Tests/XCTest+AllTests.swift",
+        "Platform",
+        "Tests/RxCocoaTests/Driver+Test.swift",
+        "Tests/RxCocoaTests/Driver+Extensions.swift",
+        "Tests/RxCocoaTests/NotificationCenterTests.swift",
     ],
     targetDirName: "AllTestz",
     excluded: [
         "Tests/VirtualSchedulerTest.swift",
-        "Tests/HistoricalSchedulerTest.swift"
+        "Tests/HistoricalSchedulerTest.swift",
+        // @testable import doesn't work well in Linux :/
+        "BagTest.swift"
     ])
 
 try buildAllTestsTarget("Sources/AllTestz")

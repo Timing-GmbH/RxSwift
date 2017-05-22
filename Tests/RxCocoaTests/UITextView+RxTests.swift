@@ -1,6 +1,6 @@
 //
 //  UITextView+RxTests.swift
-//  Rx
+//  Tests
 //
 //  Created by Krunoslav Zaher on 5/13/16.
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
@@ -12,10 +12,15 @@ import RxCocoa
 import XCTest
 
 // UITextView
-class UITextViewTests : RxTest {
-    func testText_DelegateEventCompletesOnDealloc() {
+final class UITextViewTests : RxTest {
+    func testText_TextCompletesOnDealloc() {
         let createView: () -> UITextView = { UITextView(frame: CGRect(x: 0, y: 0, width: 1, height: 1)) }
-        ensurePropertyDeallocated(createView, "text") { (view: UITextView) in view.rx.text }
+        ensurePropertyDeallocated(createView, "text", comparer: { $0 == $1 }) { (view: UITextView) in view.rx.text }
+    }
+
+    func testText_ValueCompletesOnDealloc() {
+        let createView: () -> UITextView = { UITextView(frame: CGRect(x: 0, y: 0, width: 1, height: 1)) }
+        ensurePropertyDeallocated(createView, "text", comparer: { $0 == $1 }) { (view: UITextView) in view.rx.value }
     }
 
     func testSettingTextDoesntClearMarkedText() {
@@ -110,7 +115,7 @@ class UITextViewTests : RxTest {
     }
 }
 
-class UITextViewSubclass2 : UITextView {
+final class UITextViewSubclass2 : UITextView {
     var set: Bool = false
 
     override var text: String? {

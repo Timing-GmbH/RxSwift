@@ -8,7 +8,7 @@
 
 #if !os(Linux)
 
-import Foundation
+import Foundation.NSObject
 #if !RX_NO_MODULE
     import RxSwift
     #if SWIFT_PACKAGE && !DISABLE_SWIZZLING && !os(Linux)
@@ -17,11 +17,11 @@ import Foundation
 #endif
 
 #if !DISABLE_SWIZZLING && !os(Linux)
-var deallocatingSubjectTriggerContext: UInt8 = 0
-var deallocatingSubjectContext: UInt8 = 0
+fileprivate var deallocatingSubjectTriggerContext: UInt8 = 0
+fileprivate var deallocatingSubjectContext: UInt8 = 0
 #endif
-var deallocatedSubjectTriggerContext: UInt8 = 0
-var deallocatedSubjectContext: UInt8 = 0
+fileprivate var deallocatedSubjectTriggerContext: UInt8 = 0
+fileprivate var deallocatedSubjectContext: UInt8 = 0
 
 #if !os(Linux)
 
@@ -65,7 +65,6 @@ extension Reactive where Base: NSObject {
      - parameter retainSelf: Retains self during observation if set `true`.
      - returns: Observable sequence of objects on `keyPath`.
      */
-    // @warn_unused_result(message:"http://git.io/rxs.uo")
     public func observe<E>(_ type: E.Type, _ keyPath: String, options: NSKeyValueObservingOptions = [.new, .initial], retainSelf: Bool = true) -> Observable<E?> {
         return KVOObservable(object: base, keyPath: keyPath, options: options, retainTarget: retainSelf).asObservable()
     }
@@ -90,7 +89,6 @@ extension Reactive where Base: NSObject {
      - parameter options: KVO mechanism notification options.
      - returns: Observable sequence of objects on `keyPath`.
      */
-    // @warn_unused_result(message:"http://git.io/rxs.uo")
     public func observeWeakly<E>(_ type: E.Type, _ keyPath: String, options: NSKeyValueObservingOptions = [.new, .initial]) -> Observable<E?> {
         return observeWeaklyKeyPathFor(base, keyPath: keyPath, options: options)
             .map { n in
@@ -314,7 +312,7 @@ extension Reactive where Base: AnyObject {
 #endif
 
 
-fileprivate class DeallocObservable {
+fileprivate final class DeallocObservable {
     let _subject = ReplaySubject<Void>.create(bufferSize:1)
 
     init() {
@@ -337,7 +335,7 @@ fileprivate protocol KVOObservableProtocol {
     var options: NSKeyValueObservingOptions { get }
 }
 
-fileprivate class KVOObserver
+fileprivate final class KVOObserver
     : _RXKVOObserver
     , Disposable {
     typealias Callback = (Any?) -> Void
@@ -346,7 +344,7 @@ fileprivate class KVOObserver
 
     init(parent: KVOObservableProtocol, callback: @escaping Callback) {
         #if TRACE_RESOURCES
-            OSAtomicIncrement32Barrier(&resourceCount)
+            _ = Resources.incrementTotal()
         #endif
 
         super.init(target: parent.target, retainTarget: parent.retainTarget, keyPath: parent.keyPath, options: parent.options, callback: callback)
@@ -360,12 +358,12 @@ fileprivate class KVOObserver
 
     deinit {
         #if TRACE_RESOURCES
-            OSAtomicDecrement32Barrier(&resourceCount)
+            _ = Resources.decrementTotal()
         #endif
     }
 }
 
-fileprivate class KVOObservable<Element>
+fileprivate final class KVOObservable<Element>
     : ObservableType
     , KVOObservableProtocol {
     typealias E = Element?

@@ -1,6 +1,6 @@
 //
 //  ColdObservable.swift
-//  Rx
+//  RxTest
 //
 //  Created by Krunoslav Zaher on 3/14/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
@@ -8,23 +8,19 @@
 
 import RxSwift
 
-/**
-A representation of cold observable sequence.
-
-Recorded events are replayed after subscription once per subscriber.
-
-Event times represent relative offset to subscription time.
-*/
-class ColdObservable<Element>
+/// A representation of cold observable sequence.
+///
+/// Recorded events are replayed after subscription once per subscriber.
+///
+/// Event times represent relative offset to subscription time.
+final class ColdObservable<Element>
     : TestableObservable<Element> {
 
     override init(testScheduler: TestScheduler, recordedEvents: [Recorded<Event<Element>>]) {
         super.init(testScheduler: testScheduler, recordedEvents: recordedEvents)
     }
 
-    /**
-    Subscribes `observer` to receive events for this sequence.
-    */
+    /// Subscribes `observer` to receive events for this sequence.
     override func subscribe<O : ObserverType>(_ observer: O) -> Disposable where O.E == Element {
         subscriptions.append(Subscription(testScheduler.clock))
         

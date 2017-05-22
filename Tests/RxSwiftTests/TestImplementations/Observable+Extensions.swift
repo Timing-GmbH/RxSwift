@@ -1,12 +1,11 @@
 //
 //  Observable+Extensions.swift
-//  RxTests
+//  Tests
 //
 //  Created by Krunoslav Zaher on 6/4/15.
 //  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
-import Foundation
 import RxSwift
 import RxTest
 
