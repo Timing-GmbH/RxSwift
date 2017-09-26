@@ -3763,7 +3763,7 @@
 					};
 					C8E8BA541E2C181A00A4AC2C = {
 						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = 783T66X79Y;
+						DevelopmentTeam = NDB5JK3DZG;
 						ProvisioningStyle = Automatic;
 					};
 					D2138C741BB9BE9800339B5C = {
@@ -6672,7 +6672,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 783T66X79Y;
+				DEVELOPMENT_TEAM = NDB5JK3DZG;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -6694,7 +6694,7 @@
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = 783T66X79Y;
+				DEVELOPMENT_TEAM = NDB5JK3DZG;
 				INFOPLIST_FILE = Tests/Benchmarks/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -6711,7 +6711,7 @@
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = 783T66X79Y;
+				DEVELOPMENT_TEAM = NDB5JK3DZG;
 				INFOPLIST_FILE = Tests/Benchmarks/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
