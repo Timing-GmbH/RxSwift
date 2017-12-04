@@ -29,7 +29,7 @@ public final class BehaviorSubject<Element>
     }
     
 	let _lock = RecursiveLock()
-	var _source: Observable<Element>?
+	public var _source: Observable<Element>?
 	
     // state
     private var _isDisposed = false

@@ -8,7 +8,7 @@
 
 import Foundation
 
-extension Observable {
+extension ObservableType {
     /**
      Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences produces an element.
 
@@ -17,7 +17,7 @@ extension Observable {
      - parameter resultSelector: Function to invoke whenever any of the sources produces an element.
      - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
      */
-    public static func combineLatest<C: Collection>(_ collection: C, debounceDependencies: Bool = false, _ resultSelector: @escaping ([C.Iterator.Element.E]) throws -> Element) -> Observable<Element>
+    public static func combineLatest<C: Collection>(_ collection: C, debounceDependencies: Bool = false, _ resultSelector: @escaping ([C.Iterator.Element.E]) throws -> E) -> Observable<E>
         where C.Iterator.Element: ObservableType {
         return CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: resultSelector)
     }
@@ -29,8 +29,8 @@ extension Observable {
 
      - returns: An observable sequence containing the result of combining elements of the sources.
      */
-    public static func combineLatest<C: Collection>(_ collection: C, debounceDependencies: Bool = false) -> Observable<[Element]>
-        where C.Iterator.Element: ObservableType, C.Iterator.Element.E == Element {
+    public static func combineLatest<C: Collection>(_ collection: C, debounceDependencies: Bool = false) -> Observable<[E]>
+        where C.Iterator.Element: ObservableType, C.Iterator.Element.E == E {
         return CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: { $0 })
     }
 }
@@ -185,7 +185,7 @@ final fileprivate class CombineLatestCollectionType<C: Collection, R> : Producer
     init(sources: C, debounceDependencies: Bool, resultSelector: @escaping ResultSelector) {
         _sources = sources
         _resultSelector = resultSelector
-        _count = Int(self._sources.count.toIntMax())
+        _count = Int(Int64(self._sources.count))
         _debounceDependencies = debounceDependencies
     }
     

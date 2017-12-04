@@ -29,6 +29,7 @@ public final class PublishSubject<Element>
     }
     
     private let _lock = RecursiveLock()
+	public var _source: Observable<Element>?
     
     // state
     private var _isDisposed = false
