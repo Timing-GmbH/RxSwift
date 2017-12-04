@@ -1800,7 +1800,7 @@ extension ObservableCombineLatestTest {
 		let aObs = a.asObservable()
 		aObs
 			.bind(to: b)
-			.addDisposableTo(disposeBag)
+			.disposed(by: disposeBag)
 		var finalValue = -1
 		let observable = Observable
 			.combineLatest(aObs, b.asObservable(), debounceDependencies: true) { $0 + $1 }
