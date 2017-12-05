@@ -6767,7 +6767,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_SWIFT_FLAGS = "-D TRACE_RESOURCES -D DEBUG -Xfrontend -debug-time-function-bodies -Xfrontend -warn-long-expression-type-checking=300 -Xfrontend -warn-long-function-bodies=300";
+				OTHER_SWIFT_FLAGS = "-D TRACE_RESOURCES -D DEBUG -Xfrontend -debug-time-function-bodies -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -warn-long-function-bodies=500";
 				SDKROOT = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
