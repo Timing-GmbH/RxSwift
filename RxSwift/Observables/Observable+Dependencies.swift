@@ -44,12 +44,6 @@ private struct ObservableUsableEqualityWrapper: Hashable {
 	}
 }
 
-public extension Sequence where Iterator.Element: AnyObject {
-	func deduplicatedByPointer() -> [Iterator.Element] {
-		return Array(Set(self.map { PointerEqualityWrapper(value: $0) }).map { $0.value })
-	}
-}
-
 public extension Sequence where Iterator.Element == ObservableUsable {
 	func deduplicatedByPointer() -> [ObservableUsable] {
 		return Array(Set(self.map { ObservableUsableEqualityWrapper(value: $0) }).map { $0.value })
