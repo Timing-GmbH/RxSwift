@@ -14,16 +14,16 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C8A56AD61AD7424700B4673B"
-               BuildableName = "RxSwift.framework"
-               BlueprintName = "RxSwift-iOS"
+               BlueprintIdentifier = "C8165ABB21891AFF00494BEF"
+               BuildableName = "RxAtomic.framework"
+               BlueprintName = "RxAtomic"
                ReferencedContainer = "container:Rx.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Release-Tests"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
@@ -32,9 +32,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C83508C21C386F6F0027C24C"
-               BuildableName = "AllTests-iOS.xctest"
-               BlueprintName = "AllTests-iOS"
+               BlueprintIdentifier = "C83509931C38742C0027C24C"
+               BuildableName = "AllTests-macOS.xctest"
+               BlueprintName = "AllTests-macOS"
                ReferencedContainer = "container:Rx.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -42,9 +42,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C8A56AD61AD7424700B4673B"
-            BuildableName = "RxSwift.framework"
-            BlueprintName = "RxSwift-iOS"
+            BlueprintIdentifier = "C809396F1B8A71840088E94D"
+            BuildableName = "RxCocoa.framework"
+            BlueprintName = "RxCocoa-macOS"
             ReferencedContainer = "container:Rx.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -59,15 +59,14 @@
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
-      stopOnEveryThreadSanitizerIssue = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C8A56AD61AD7424700B4673B"
-            BuildableName = "RxSwift.framework"
-            BlueprintName = "RxSwift-iOS"
+            BlueprintIdentifier = "C8165ABB21891AFF00494BEF"
+            BuildableName = "RxAtomic.framework"
+            BlueprintName = "RxAtomic"
             ReferencedContainer = "container:Rx.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -83,9 +82,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C8A56AD61AD7424700B4673B"
-            BuildableName = "RxSwift.framework"
-            BlueprintName = "RxSwift-iOS"
+            BlueprintIdentifier = "C8165ABB21891AFF00494BEF"
+            BuildableName = "RxAtomic.framework"
+            BlueprintName = "RxAtomic"
             ReferencedContainer = "container:Rx.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

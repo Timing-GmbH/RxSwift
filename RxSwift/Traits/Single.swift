@@ -121,7 +121,7 @@ extension PrimitiveSequenceType where TraitType == SingleTrait {
      - seealso: [just operator on reactivex.io](http://reactivex.io/documentation/operators/just.html)
      
      - parameter element: Single element in the resulting observable sequence.
-     - parameter: Scheduler to send the single element on.
+     - parameter scheduler: Scheduler to send the single element on.
      - returns: An observable sequence containing the single specified element.
      */
     public static func just(_ element: ElementType, scheduler: ImmediateSchedulerType) -> Single<ElementType> {
@@ -192,7 +192,7 @@ extension PrimitiveSequenceType where TraitType == SingleTrait {
      - parameter onDispose: Action to invoke after subscription to source observable has been disposed for any reason. It can be either because sequence terminates for some reason or observer subscription being disposed.
      - returns: The source sequence with the side-effecting behavior applied.
      */
-    @available(*, deprecated, message: "Use do(onSuccess:onError:onSubscribe:onSubcribed:onDispose:) instead", renamed: "do(onSuccess:onError:onSubscribe:onSubcribed:onDispose:)")
+    @available(*, deprecated, renamed: "do(onSuccess:onError:onSubscribe:onSubscribed:onDispose:)")
     public func `do`(onNext: ((ElementType) throws -> Void)?,
                      onError: ((Swift.Error) throws -> Void)? = nil,
                      onSubscribe: (() -> ())? = nil,
@@ -248,7 +248,33 @@ extension PrimitiveSequenceType where TraitType == SingleTrait {
         -> Single<R> {
             return Single<R>(raw: primitiveSequence.source.flatMap(selector))
     }
-    
+
+    /**
+     Projects each element of an observable sequence to an observable sequence and merges the resulting observable sequences into one observable sequence.
+
+     - seealso: [flatMap operator on reactivex.io](http://reactivex.io/documentation/operators/flatmap.html)
+
+     - parameter selector: A transform function to apply to each element.
+     - returns: An observable sequence whose elements are the result of invoking the one-to-many transform function on each element of the input sequence.
+     */
+    public func flatMapMaybe<R>(_ selector: @escaping (ElementType) throws -> Maybe<R>)
+        -> Maybe<R> {
+            return Maybe<R>(raw: primitiveSequence.source.flatMap(selector))
+    }
+
+    /**
+     Projects each element of an observable sequence to an observable sequence and merges the resulting observable sequences into one observable sequence.
+
+     - seealso: [flatMap operator on reactivex.io](http://reactivex.io/documentation/operators/flatmap.html)
+
+     - parameter selector: A transform function to apply to each element.
+     - returns: An observable sequence whose elements are the result of invoking the one-to-many transform function on each element of the input sequence.
+     */
+    public func flatMapCompletable(_ selector: @escaping (ElementType) throws -> Completable)
+        -> Completable {
+            return Completable(raw: primitiveSequence.source.flatMap(selector))
+    }
+
     /**
      Merges the specified observable sequences into one observable sequence by using the selector function whenever all of the observable sequences have produced an element at a corresponding index.
      
@@ -293,5 +319,19 @@ extension PrimitiveSequenceType where TraitType == SingleTrait {
     public func catchErrorJustReturn(_ element: ElementType)
         -> PrimitiveSequence<TraitType, ElementType> {
         return PrimitiveSequence(raw: primitiveSequence.source.catchErrorJustReturn(element))
+    }
+
+    /// Converts `self` to `Maybe` trait.
+    ///
+    /// - returns: Maybe trait that represents `self`.
+    public func asMaybe() -> Maybe<ElementType> {
+        return Maybe(raw: primitiveSequence.source)
+    }
+
+    /// Converts `self` to `Completable` trait.
+    ///
+    /// - returns: Completable trait that represents `self`.
+    public func asCompletable() -> Completable {
+        return primitiveSequence.source.ignoreElements()
     }
 }
