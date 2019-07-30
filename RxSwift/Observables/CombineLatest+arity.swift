@@ -23,7 +23,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType>
-        (_ source1: O1, _ source2: O2, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest2(
             source1: source1.asObservable(), source2: source2.asObservable(),
@@ -42,7 +42,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType>
         (_ source1: O1, _ source2: O2, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E)> {
+            -> Observable<(O1.Element, O2.Element)> {
         return CombineLatest2(
             source1: source1.asObservable(), source2: source2.asObservable(),
             debounceDependencies: debounceDependencies,
@@ -146,7 +146,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType>
-        (_ source1: O1, _ source2: O2, _ source3: O3, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E, O3.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, _ source3: O3, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element, O3.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest3(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(),
@@ -165,7 +165,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType>
         (_ source1: O1, _ source2: O2, _ source3: O3, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E, O3.E)> {
+            -> Observable<(O1.Element, O2.Element, O3.Element)> {
         return CombineLatest3(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(),
             debounceDependencies: debounceDependencies,
@@ -277,7 +277,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType>
-        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E, O3.E, O4.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element, O3.Element, O4.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest4(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(),
@@ -296,7 +296,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType>
         (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E, O3.E, O4.E)> {
+            -> Observable<(O1.Element, O2.Element, O3.Element, O4.Element)> {
         return CombineLatest4(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(),
             debounceDependencies: debounceDependencies,
@@ -416,7 +416,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType>
-        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E, O3.E, O4.E, O5.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element, O3.Element, O4.Element, O5.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest5(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(),
@@ -435,7 +435,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType>
         (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E, O3.E, O4.E, O5.E)> {
+            -> Observable<(O1.Element, O2.Element, O3.Element, O4.Element, O5.Element)> {
         return CombineLatest5(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(),
             debounceDependencies: debounceDependencies,
@@ -563,7 +563,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType>
-        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element, O3.Element, O4.Element, O5.Element, O6.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest6(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(),
@@ -582,7 +582,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType>
         (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E, O3.E, O4.E, O5.E, O6.E)> {
+            -> Observable<(O1.Element, O2.Element, O3.Element, O4.Element, O5.Element, O6.Element)> {
         return CombineLatest6(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(),
             debounceDependencies: debounceDependencies,
@@ -718,7 +718,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType, O7: ObservableType>
-        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element, O3.Element, O4.Element, O5.Element, O6.Element, O7.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest7(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(), source7: source7.asObservable(),
@@ -737,7 +737,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType, O7: ObservableType>
         (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E)> {
+            -> Observable<(O1.Element, O2.Element, O3.Element, O4.Element, O5.Element, O6.Element, O7.Element)> {
         return CombineLatest7(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(), source7: source7.asObservable(),
             debounceDependencies: debounceDependencies,
@@ -881,7 +881,7 @@ extension ObservableType {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType, O7: ObservableType, O8: ObservableType>
-        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, debounceDependencies: Bool = false, resultSelector: @escaping (O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E, O8.E) throws -> Element)
+        (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, debounceDependencies: Bool = false, resultSelector: @escaping (O1.Element, O2.Element, O3.Element, O4.Element, O5.Element, O6.Element, O7.Element, O8.Element) throws -> Element)
             -> Observable<Element> {
         return CombineLatest8(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(), source7: source7.asObservable(), source8: source8.asObservable(),
@@ -900,7 +900,7 @@ extension ObservableType where Element == Any {
     */
     public static func combineLatest<O1: ObservableType, O2: ObservableType, O3: ObservableType, O4: ObservableType, O5: ObservableType, O6: ObservableType, O7: ObservableType, O8: ObservableType>
         (_ source1: O1, _ source2: O2, _ source3: O3, _ source4: O4, _ source5: O5, _ source6: O6, _ source7: O7, _ source8: O8, debounceDependencies: Bool = false)
-            -> Observable<(O1.E, O2.E, O3.E, O4.E, O5.E, O6.E, O7.E, O8.E)> {
+            -> Observable<(O1.Element, O2.Element, O3.Element, O4.Element, O5.Element, O6.Element, O7.Element, O8.Element)> {
         return CombineLatest8(
             source1: source1.asObservable(), source2: source2.asObservable(), source3: source3.asObservable(), source4: source4.asObservable(), source5: source5.asObservable(), source6: source6.asObservable(), source7: source7.asObservable(), source8: source8.asObservable(),
             debounceDependencies: debounceDependencies,

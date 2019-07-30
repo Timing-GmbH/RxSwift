@@ -27,7 +27,9 @@ private func unwrap(_ any: Any) -> Any? {
 private struct PointerEqualityWrapper<T>: Hashable where T: AnyObject {
 	let value: T
 	
-	var hashValue: Int { return ObjectIdentifier(value).hashValue }
+	func hash(into hasher: inout Hasher) {
+		hasher.combine(ObjectIdentifier(value))
+	}
 	
 	static func ==<T>(A: PointerEqualityWrapper<T>, B: PointerEqualityWrapper<T>) -> Bool {
 		return A.value === B.value
@@ -37,7 +39,9 @@ private struct PointerEqualityWrapper<T>: Hashable where T: AnyObject {
 private struct ObservableUsableEqualityWrapper: Hashable {
 	let value: ObservableUsable
 	
-	var hashValue: Int { return ObjectIdentifier(value).hashValue }
+	func hash(into hasher: inout Hasher) {
+		hasher.combine(ObjectIdentifier(value))
+	}
 	
 	static func ==(A: ObservableUsableEqualityWrapper, B: ObservableUsableEqualityWrapper) -> Bool {
 		return A.value === B.value
@@ -51,7 +55,7 @@ public extension Sequence where Iterator.Element == ObservableUsable {
 }
 
 public extension ObservableUsable {
-    public var observableSources: [ObservableUsable] {
+    var observableSources: [ObservableUsable] {
         var result: [ObservableUsable] = []
         let mirror = Mirror(reflecting: self)
         for case let (label?, value) in mirror.children {
@@ -65,11 +69,11 @@ public extension ObservableUsable {
         return result
     }
     
-    public var observableSourcesTree: [ObservableUsable] {
+    var observableSourcesTree: [ObservableUsable] {
         return [self] + observableSources.flatMap { $0.observableSourcesTree }
     }
     
-    public var leafSources: [ObservableUsable] {
+    var leafSources: [ObservableUsable] {
 		// This is quite a bit faster than `observableSourcesTree.filter { $0.observableSources.isEmpty }`.
 		let observableSources = self.observableSources
 		if !observableSources.isEmpty {
@@ -104,14 +108,14 @@ class Leaf<SourceType>: Producer<SourceType> {
         _src = source
     }
     
-    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == SourceType {
+    override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.Element == SourceType {
 		return (sink: Disposables.create(), subscription: Disposables.create(_src.subscribe(observer), cancel))
     }
 }
 
 extension ObservableType {
     // @warn_unused_result(message="http://git.io/rxs.uo")
-    public func treatAsLeaf() -> Observable<E> {
+    public func treatAsLeaf() -> Observable<Element> {
         return Leaf(source: self.asObservable())
     }
 }
@@ -127,7 +131,7 @@ class IndirectDependency<SourceType, DependencyType>: Producer<SourceType> {
 		_indirectDependencySource = dependency
 	}
 	
-	override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == SourceType {
+	override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.Element == SourceType {
 		return (sink: Disposables.create(), subscription: Disposables.create(_source.subscribe(observer), cancel))
 	}
 }
@@ -136,7 +140,7 @@ extension ObservableType {
 	// @warn_unused_result(message="http://git.io/rxs.uo")
 	// When using `debounceDependencies: true`, this causes the leaf dependencies of `dependency` to also count as
 	// dependencies for `source`.
-	public func withIndirectDependency<DependencyType>(_ dependency: Observable<DependencyType>) -> Observable<E> {
+	public func withIndirectDependency<DependencyType>(_ dependency: Observable<DependencyType>) -> Observable<Element> {
 		return IndirectDependency(source: self.asObservable(), dependency: dependency)
 	}
 }
