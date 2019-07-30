@@ -1,9 +1,13 @@
 Pod::Spec.new do |s|
-  s.name             = "RxAtomic"
-  s.version          = "4.4.0"
-  s.summary          = "Atomic primitives for RxSwift"
+  s.name             = "RxRelay"
+  s.version          = "5.0.1"
+  s.summary          = "Relays for RxSwift - PublishRelay and BehaviorRelay"
   s.description      = <<-DESC
-Atomic primitives for RxSwift.
+Relays for RxSwift - PublishRelay and BehaviorRelay
+
+* PublishRelay
+* BehaviorRelay
+* Binding overloads
                         DESC
   s.homepage         = "https://github.com/ReactiveX/RxSwift"
   s.license          = 'MIT'
@@ -17,5 +21,8 @@ Atomic primitives for RxSwift.
   s.watchos.deployment_target = '3.0'
   s.tvos.deployment_target = '9.0'
 
-  s.source_files          = 'RxAtomic/**/*.{c,h}'
+  s.source_files          = 'RxRelay/**/*.{swift,h,m}'
+
+  s.dependency 'RxSwift', '~> 5'
+  s.swift_version = '5.0'
 end

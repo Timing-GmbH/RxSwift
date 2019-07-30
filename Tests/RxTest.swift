@@ -48,7 +48,7 @@ class RxTest
     : XCTestCase {
 
 #if TRACE_RESOURCES
-    fileprivate var startResourceCount: Int32 = 0
+    private var startResourceCount: Int32 = 0
 #endif
 
     var accumulateStatistics: Bool {
@@ -103,11 +103,8 @@ extension RxTest {
                 if self.startResourceCount < Resources.total {
                     // main schedulers need to finish work
                     print("Waiting for resource cleanup ...")
-                    #if swift(>=4.2)
-                        let mode = RunLoop.Mode.default
-                    #else
-                        let mode = RunLoopMode.defaultRunLoopMode
-                    #endif
+                    let mode = RunLoop.Mode.default
+
                     RunLoop.current.run(mode: mode, before: Date(timeIntervalSinceNow: 0.05))
                 }
                 else {
@@ -128,4 +125,3 @@ extension RxTest {
         #endif
     }
 }
-

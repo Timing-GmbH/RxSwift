@@ -6,7 +6,7 @@
 //  Copyright © 2016 Krunoslav Zaher. All rights reserved.
 //
 
-#if os(iOS)
+#if os(iOS) && !targetEnvironment(UIKitForMac)
 
     import UIKit
     import RxSwift
@@ -23,14 +23,14 @@
         public var didStartLoad: Observable<Void> {
             return delegate
                 .methodInvoked(#selector(UIWebViewDelegate.webViewDidStartLoad(_:)))
-                .map {_ in}
+                .map { _ in }
         }
 
         /// Reactive wrapper for `delegate` message.
         public var didFinishLoad: Observable<Void> {
             return delegate
                 .methodInvoked(#selector(UIWebViewDelegate.webViewDidFinishLoad(_:)))
-                .map {_ in}
+                .map { _ in }
         }
         
         /// Reactive wrapper for `delegate` message.

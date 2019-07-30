@@ -18,7 +18,7 @@ final class ObjectRuntimeState {
         actingAs = ClassRuntimeState(RXObjCTestRuntime.objCClass(target))
     }
 
-    fileprivate static func changesFrom(_ from: ClassRuntimeState, to: ClassRuntimeState) -> [ObjectRuntimeChange] {
+    private static func changesFrom(_ from: ClassRuntimeState, to: ClassRuntimeState) -> [ObjectRuntimeChange] {
         if from.targetClass == to.targetClass {
             var changes = [ObjectRuntimeChange]()
             for (selector, implementation) in to.implementations {
@@ -88,9 +88,9 @@ enum ObjectRuntimeChange : Hashable {
 }
 
 extension ObjectRuntimeChange {
-    var hashValue: Int {
+    func hash(into hasher: inout Hasher) {
         // who cares, this is not performance critical
-        return 0
+        hasher.combine(0)
     }
 
     var isClassChange: Bool {
