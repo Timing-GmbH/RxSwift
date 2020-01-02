@@ -173,6 +173,11 @@ extension ObservableType {
 public final class Variable<Element> {
     private let _subject: BehaviorSubject<Element>
 
+    public var source: Observable<Element>? {
+        get { return _subject._source }
+        set { _subject._source = newValue }
+    }
+
     private var _lock = SpinLock()
 
     // state
