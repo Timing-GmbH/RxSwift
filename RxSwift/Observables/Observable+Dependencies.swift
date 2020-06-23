@@ -59,7 +59,8 @@ public extension ObservableUsable {
         var result: [ObservableUsable] = []
         let mirror = Mirror(reflecting: self)
         for case let (label?, value) in mirror.children {
-            if label.contains("source") || label.contains("first") || label.contains("pauser"),
+			// Use "ource" instead of "source" and "Source" because that matches both while saving us one check.
+            if label.contains("ource") || label.contains("first"),
                 // We need to use unwrap() here to also cover cases where the source variable is an Optional, as just
                 // as? could not unwrap that otherwise.
                 let observableValue = unwrap(value) as? ObservableUsable {
@@ -100,8 +101,8 @@ extension Observable: ObservableUsable {
 }
 
 // MARK: -
-class Leaf<SourceType>: Producer<SourceType> {
-    // This must not be called _source as the whole point of this class is to disguise the observable's "real" source.
+class NoDependencies<SourceType>: Producer<SourceType> {
+    // This should not be called _source as the whole point of this class is to disguise the observable's "real" source.
     private let _src: Observable<SourceType>
     
     init(source: Observable<SourceType>) {
@@ -115,13 +116,14 @@ class Leaf<SourceType>: Producer<SourceType> {
 
 extension ObservableType {
     // @warn_unused_result(message="http://git.io/rxs.uo")
-    public func treatAsLeaf() -> Observable<Element> {
-        return Leaf(source: self.asObservable())
+    public func withoutDependencies() -> Observable<Element> {
+        return NoDependencies(source: self.asObservable())
     }
 }
 
 // MARK: -
 class IndirectDependency<SourceType, DependencyType>: Producer<SourceType> {
+	// This must not contain "ource" (see above) as the whole point of this class is to disguise the observable's "real" source.
 	private let _source: Observable<SourceType>
 	private let _indirectDependencySource: Observable<DependencyType>
 	

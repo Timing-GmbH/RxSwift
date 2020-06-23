@@ -1771,7 +1771,7 @@ extension ObservableCombineLatestTest {
 		XCTAssertEqual(finalValue, 4)
 	}
 	
-	//! TODO: Test treatAsLeaf().
+	//! TODO: Test withoutDependencies().
 	func testCombineLatest_DebounceDependenciesSameSourceIndirect() {
 		var nEvents = 0
 		
