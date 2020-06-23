@@ -122,7 +122,6 @@ extension ObservableType {
 
 // MARK: -
 class IndirectDependency<SourceType, DependencyType>: Producer<SourceType> {
-	// This must not be called _source as the whole point of this class is to disguise the observable's "real" source.
 	private let _source: Observable<SourceType>
 	private let _indirectDependencySource: Observable<DependencyType>
 	
