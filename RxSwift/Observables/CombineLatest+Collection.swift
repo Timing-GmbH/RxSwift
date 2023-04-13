@@ -19,7 +19,7 @@ extension ObservableType {
      */
     public static func combineLatest<Collection: Swift.Collection>(_ collection: Collection, debounceDependencies: Bool = false, resultSelector: @escaping ([Collection.Element.Element]) throws -> Element) -> Observable<Element>
         where Collection.Element: ObservableType {
-        return CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: resultSelector)
+        CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: resultSelector)
     }
 
     /**
@@ -31,7 +31,7 @@ extension ObservableType {
      */
     public static func combineLatest<Collection: Swift.Collection>(_ collection: Collection, debounceDependencies: Bool = false) -> Observable<[Element]>
         where Collection.Element: ObservableType, Collection.Element.Element == Element {
-        return CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: { $0 })
+        CombineLatestCollectionType(sources: collection, debounceDependencies: debounceDependencies, resultSelector: { $0 })
     }
 }
 
@@ -41,100 +41,99 @@ final private class CombineLatestCollectionTypeSink<Collection: Swift.Collection
     typealias Parent = CombineLatestCollectionType<Collection, Result>
     typealias SourceElement = Collection.Element.Element
     
-    let _parent: Parent
+    let parent: Parent
     
-    let _lock = RecursiveLock()
+    let lock = RecursiveLock()
 
     // state
-    var _numberOfValues = 0
-    var _values: [SourceElement?]
-    var _isDone: [Bool]
-    var _numberOfDone = 0
-    var _subscriptions: [SingleAssignmentDisposable]
-    var _eraseSubscriptions: [Disposable]
+    var numberOfValues = 0
+    var values: [SourceElement?]
+    var isDone: [Bool]
+    var numberOfDone = 0
+    var subscriptions: [SingleAssignmentDisposable]
+    var eraseSubscriptions: [Disposable]
     
     init(parent: Parent, observer: Observer, cancel: Cancelable) {
-        self._parent = parent
-        self._values = [SourceElement?](repeating: nil, count: parent._count)
-        self._isDone = [Bool](repeating: false, count: parent._count)
-        self._subscriptions = [SingleAssignmentDisposable]()
-        self._subscriptions.reserveCapacity(parent._count)
+        self.parent = parent
+        self.values = [SourceElement?](repeating: nil, count: parent.count)
+        self.isDone = [Bool](repeating: false, count: parent.count)
+        self.subscriptions = [SingleAssignmentDisposable]()
+        self.subscriptions.reserveCapacity(parent.count)
         
-        for _ in 0 ..< parent._count {
-            self._subscriptions.append(SingleAssignmentDisposable())
+        for _ in 0 ..< parent.count {
+            self.subscriptions.append(SingleAssignmentDisposable())
         }
         
-        _eraseSubscriptions = (0 ..< parent._count).map { _ in Disposables.create() }
+        self.eraseSubscriptions = (0 ..< parent.count).map { _ in Disposables.create() }
         
         super.init(observer: observer, cancel: cancel)
     }
     
     func on(_ event: Event<SourceElement>, atIndex: Int) {
-        self._lock.lock(); defer { self._lock.unlock() } // {
-            switch event {
-            case .next(let element):
-                if self._values[atIndex] == nil {
-                   self._numberOfValues += 1
-                }
-                
-                self._values[atIndex] = element
-                
-                if self._numberOfValues < self._parent._count {
-                    let numberOfOthersThatAreDone = self._numberOfDone - (self._isDone[atIndex] ? 1 : 0)
-                    if numberOfOthersThatAreDone == self._parent._count - 1 {
-                        self.forwardOn(.completed)
-                        self.dispose()
-                    }
-                    return
-                }
-                
-                do {
-                    let result = try self._parent._resultSelector(self._values.map { $0! })
-                    self.forwardOn(.next(result))
-                }
-                catch let error {
-                    self.forwardOn(.error(error))
-                    self.dispose()
-                }
-                
-            case .error(let error):
-                self.forwardOn(.error(error))
-                self.dispose()
-            case .completed:
-                if self._isDone[atIndex] {
-                    return
-                }
-                
-                self._isDone[atIndex] = true
-                self._numberOfDone += 1
-                
-                if self._numberOfDone == self._parent._count {
+        self.lock.lock(); defer { self.lock.unlock() }
+        switch event {
+        case .next(let element):
+            if self.values[atIndex] == nil {
+                self.numberOfValues += 1
+            }
+            
+            self.values[atIndex] = element
+            
+            if self.numberOfValues < self.parent.count {
+                let numberOfOthersThatAreDone = self.numberOfDone - (self.isDone[atIndex] ? 1 : 0)
+                if numberOfOthersThatAreDone == self.parent.count - 1 {
                     self.forwardOn(.completed)
                     self.dispose()
                 }
-                else {
-                    self._subscriptions[atIndex].dispose()
-                    self._eraseSubscriptions[atIndex].dispose()
-                }
+                return
             }
-        // }
+            
+            do {
+                let result = try self.parent.resultSelector(self.values.map { $0! })
+                self.forwardOn(.next(result))
+            }
+            catch let error {
+                self.forwardOn(.error(error))
+                self.dispose()
+            }
+            
+        case .error(let error):
+            self.forwardOn(.error(error))
+            self.dispose()
+        case .completed:
+            if self.isDone[atIndex] {
+                return
+            }
+            
+            self.isDone[atIndex] = true
+            self.numberOfDone += 1
+            
+            if self.numberOfDone == self.parent.count {
+                self.forwardOn(.completed)
+                self.dispose()
+            }
+            else {
+                self.subscriptions[atIndex].dispose()
+                self.eraseSubscriptions[atIndex].dispose()
+            }
+        }
     }
     
     func erase(_ index: Int) {
-        _lock.lock(); defer { _lock.unlock() }
-        if _isDone[index] {
+        lock.lock(); defer { lock.unlock() }
+        if isDone[index] {
             return
         }
         
-        if _values[index] != nil {
-            _values[index] = nil
-            _numberOfValues -= 1
+        if values[index] != nil {
+            values[index] = nil
+            numberOfValues -= 1
         }
     }
     
     func run(debounceDependencies: Bool) -> Disposable {
         var j = 0
-        for i in self._parent._sources {
+        for i in self.parent.sources {
             let index = j
             let source = i.asObservable()
 
@@ -152,7 +151,7 @@ final private class CombineLatestCollectionTypeSink<Collection: Swift.Collection
 					subscription.setDisposable(disposable)
                     extraDisposables.append(subscription)
                 }
-                _eraseSubscriptions[index] = CompositeDisposable(disposables: extraDisposables)
+                eraseSubscriptions[index] = CompositeDisposable(disposables: extraDisposables)
             }
 
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
@@ -161,14 +160,14 @@ final private class CombineLatestCollectionTypeSink<Collection: Swift.Collection
                 self.on(event, atIndex: index)
             })
 
-            self._subscriptions[j].setDisposable(disposable)
+            self.subscriptions[j].setDisposable(disposable)
             
             j += 1
         }
 
-        if self._parent._sources.isEmpty {
+        if self.parent.sources.isEmpty {
             do {
-                let result = try self._parent._resultSelector([])
+                let result = try self.parent.resultSelector([])
                 self.forwardOn(.next(result))
                 self.forwardOn(.completed)
                 self.dispose()
@@ -179,28 +178,28 @@ final private class CombineLatestCollectionTypeSink<Collection: Swift.Collection
             }
         }
         
-        return Disposables.create(_subscriptions.map { $0 as Disposable } + _eraseSubscriptions)
+        return Disposables.create(subscriptions.map { $0 as Disposable } + eraseSubscriptions)
     }
 }
 
 final private class CombineLatestCollectionType<Collection: Swift.Collection, Result>: Producer<Result> where Collection.Element: ObservableConvertibleType {
     typealias ResultSelector = ([Collection.Element.Element]) throws -> Result
     
-    let _sources: Collection
-    let _resultSelector: ResultSelector
-    let _count: Int
-    let _debounceDependencies: Bool
+    let sources: Collection
+    let resultSelector: ResultSelector
+    let count: Int
+    let debounceDependencies: Bool
 
     init(sources: Collection, debounceDependencies: Bool, resultSelector: @escaping ResultSelector) {
-        self._sources = sources
-        self._resultSelector = resultSelector
-        self._count = self._sources.count
-        self._debounceDependencies = debounceDependencies
+        self.sources = sources
+        self.resultSelector = resultSelector
+        self.count = self.sources.count
+        self.debounceDependencies = debounceDependencies
     }
     
     override func run<Observer: ObserverType>(_ observer: Observer, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where Observer.Element == Result {
         let sink = CombineLatestCollectionTypeSink(parent: self, observer: observer, cancel: cancel)
-        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        let subscription = sink.run(debounceDependencies: debounceDependencies)
         return (sink: sink, subscription: subscription)
     }
 }

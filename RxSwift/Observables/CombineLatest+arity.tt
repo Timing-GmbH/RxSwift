@@ -54,14 +54,14 @@ final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joine
     typealias Result = Observer.Element
     typealias Parent = CombineLatest<%= i %><<%= (Array(1...i).map { "E\($0)" }).joined(separator: ", ") %>, Result>
 
-    let _parent: Parent
+    let parent: Parent
 
 <%= (Array(1...i).map {
-"    var _latestElement\($0): E\($0)! = nil"
+"    var latestElement\($0): E\($0)! = nil"
 }).joined(separator: "\n") %>
 
     init(parent: Parent, observer: Observer, cancel: Cancelable) {
-        self._parent = parent
+        self.parent = parent
         super.init(arity: <%= i %>, observer: observer, cancel: cancel)
     }
 
@@ -69,11 +69,11 @@ final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joine
         var disposables: [Disposable] = []
         
         if debounceDependencies {
-            for (index, source) in _parent.observableSources.enumerated() {
+            for (index, source) in self.parent.observableSources.enumerated() {
                 for leafSource in source.leafSources.deduplicatedByPointer() {
                     let subscription = SingleAssignmentDisposable()
                     
-                    let observer = CombineLatestEraseObserver(lock: _lock, parent: self, index: index, this: subscription)
+                    let observer = CombineLatestEraseObserver(lock: self.lock, parent: self, index: index, this: subscription)
                     subscription.setDisposable(leafSource.subscribeAny { observer.on($0) })
                     disposables.append(subscription)
                 }
@@ -85,7 +85,7 @@ final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joine
 }).joined(separator: "\n") %>
 
 <%= (Array(1...i).map {
-"        let observer\($0) = CombineLatestObserver(lock: self._lock, parent: self, index: \($0 - 1), setLatestValue: { (e: E\($0)) -> Void in self._latestElement\($0) = e }, this: subscription\($0))"
+"        let observer\($0) = CombineLatestObserver(lock: self.lock, parent: self, index: \($0 - 1), setLatestValue: { (e: E\($0)) -> Void in self.latestElement\($0) = e }, this: subscription\($0))"
 }).joined(separator: "\n") %>
 
         if debounceDependencies {
@@ -93,11 +93,11 @@ final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joine
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
 <%= (Array(1...i).map {
-"            subscription\($0).setDisposable(_parent._source\($0).observeOn(mainScheduler).subscribe(observer\($0)))"
+"            subscription\($0).setDisposable(self.parent.source\($0).observeOn(mainScheduler).subscribe(observer\($0)))"
 }).joined(separator: "\n") %>
         } else {
 <%= (Array(1...i).map {
-"         subscription\($0).setDisposable(self._parent._source\($0).subscribe(observer\($0)))"
+"         subscription\($0).setDisposable(self.parent.source\($0).subscribe(observer\($0)))"
 }).joined(separator: "\n") %>
         }
 
@@ -107,7 +107,7 @@ final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joine
     }
 
     override func getResult() throws -> Result {
-        return try self._parent._resultSelector(<%= (Array(1...i).map { "self._latestElement\($0)" }).joined(separator: ", ") %>)
+        try self.parent.resultSelector(<%= (Array(1...i).map { "self.latestElement\($0)" }).joined(separator: ", ") %>)
     }
 }
 
@@ -115,24 +115,24 @@ final class CombineLatest<%= i %><<%= (Array(1...i).map { "E\($0)" }).joined(sep
     typealias ResultSelector = (<%= (Array(1...i).map { "E\($0)" }).joined(separator: ", ") %>) throws -> Result
 
 <%= (Array(1...i).map {
-"    let _source\($0): Observable<E\($0)>"
+"    let source\($0): Observable<E\($0)>"
 }).joined(separator: "\n") %>
 
-    let _debounceDependencies: Bool
-    let _resultSelector: ResultSelector
+    let debounceDependencies: Bool
+    let resultSelector: ResultSelector
 
     init(<%= (Array(1...i).map { "source\($0): Observable<E\($0)>" }).joined(separator: ", ") %>, debounceDependencies: Bool, resultSelector: @escaping ResultSelector) {
 <%= (Array(1...i).map {
-"        self._source\($0) = source\($0)"
+"        self.source\($0) = source\($0)"
 }).joined(separator: "\n")  %>
 
-        self._debounceDependencies = debounceDependencies
-        self._resultSelector = resultSelector
+        self.debounceDependencies = debounceDependencies
+        self.resultSelector = resultSelector
     }
 
     override func run<Observer: ObserverType>(_ observer: Observer, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where Observer.Element == Result {
         let sink = CombineLatestSink<%= i %>_(parent: self, observer: observer, cancel: cancel)
-        let subscription = sink.run(debounceDependencies: _debounceDependencies)
+        let subscription = sink.run(debounceDependencies: debounceDependencies)
         return (sink: sink, subscription: subscription)
     }
 }

@@ -102,15 +102,15 @@ extension Observable: ObservableUsable {
 
 // MARK: -
 class NoDependencies<SourceType>: Producer<SourceType> {
-    // This should not be called _source as the whole point of this class is to disguise the observable's "real" source.
-    private let _src: Observable<SourceType>
+    // This should not be called source as the whole point of this class is to disguise the observable's "real" source.
+    private let src: Observable<SourceType>
     
     init(source: Observable<SourceType>) {
-        _src = source
+        self.src = source
     }
     
     override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.Element == SourceType {
-		return (sink: Disposables.create(), subscription: Disposables.create(_src.subscribe(observer), cancel))
+		return (sink: Disposables.create(), subscription: Disposables.create(src.subscribe(observer), cancel))
     }
 }
 
@@ -124,16 +124,16 @@ extension ObservableType {
 // MARK: -
 class IndirectDependency<SourceType, DependencyType>: Producer<SourceType> {
 	// This must not contain "ource" (see above) as the whole point of this class is to disguise the observable's "real" source.
-	private let _source: Observable<SourceType>
-	private let _indirectDependencySource: Observable<DependencyType>
+	private let source: Observable<SourceType>
+	private let indirectDependencySource: Observable<DependencyType>
 	
 	init(source: Observable<SourceType>, dependency: Observable<DependencyType>) {
-		_source = source
-		_indirectDependencySource = dependency
+		self.source = source
+		self.indirectDependencySource = dependency
 	}
 	
 	override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.Element == SourceType {
-		return (sink: Disposables.create(), subscription: Disposables.create(_source.subscribe(observer), cancel))
+		return (sink: Disposables.create(), subscription: Disposables.create(source.subscribe(observer), cancel))
 	}
 }
 

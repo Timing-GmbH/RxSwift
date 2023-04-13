@@ -10,8 +10,9 @@ This project tries to be consistent with [ReactiveX.io](http://reactivex.io/). T
 1. [Creating an `Observable` that performs work](#creating-an-observable-that-performs-work)
 1. [Sharing subscription and `share` operator](#sharing-subscription-and-share-operator)
 1. [Operators](#operators)
-1. [Playgrounds](#playgrounds)
 1. [Custom operators](#custom-operators)
+1. [Infallible](#infallible)
+1. [Playgrounds](#playgrounds)
 1. [Error handling](#error-handling)
 1. [Debugging Compile Errors](#debugging-compile-errors)
 1. [Debugging](#debugging)
@@ -158,7 +159,7 @@ In case we have something like:
 
 ```swift
 let subscription = Observable<Int>.interval(.milliseconds(300), scheduler: scheduler)
-            .observeOn(MainScheduler.instance)
+            .observe(on: MainScheduler.instance)
             .subscribe { event in
                 print(event)
             }
@@ -175,7 +176,7 @@ Also, in this case:
 
 ```swift
 let subscription = Observable<Int>.interval(.milliseconds(300), scheduler: scheduler)
-            .observeOn(serialScheduler)
+            .observe(on: MainScheduler.instance)
             .subscribe { event in
                 print(event)
             }
@@ -210,7 +211,7 @@ Additional way to automatically dispose subscription on dealloc is to use `takeU
 
 ```swift
 sequence
-    .takeUntil(self.rx.deallocated)
+    .take(until: self.rx.deallocated)
     .subscribe {
         print($0)
     }
@@ -443,18 +444,27 @@ let subscription1 = counter
     .subscribe(onNext: { n in
         print("First \(n)")
     })
+    
+print("Subscribed")
+
 let subscription2 = counter
     .subscribe(onNext: { n in
         print("Second \(n)")
     })
+    
+print("Subscribed")
 
 Thread.sleep(forTimeInterval: 0.5)
 
 subscription1.dispose()
 
+print("Disposed")
+
 Thread.sleep(forTimeInterval: 0.5)
 
 subscription2.dispose()
+
+print("Disposed")
 
 print("Ended ----")
 ```
@@ -539,7 +549,6 @@ First 3
 Second 3
 First 4
 Second 4
-First 5
 Second 5
 Second 6
 Second 7
@@ -611,7 +620,7 @@ Lets see how an unoptimized map operator can be implemented.
 
 ```swift
 extension ObservableType {
-    func myMap<R>(transform: @escaping (E) -> R) -> Observable<R> {
+    func myMap<R>(transform: @escaping (Element) -> R) -> Observable<R> {
         return Observable.create { observer in
             let subscription = self.subscribe { e in
                     switch e {
@@ -658,6 +667,12 @@ This is simply 7
 This is simply 8
 ...
 ```
+
+## Infallible
+
+`Infallible` is another flavor of `Observable` which is identical to it, but is guaranteed to never fail and thus cannot emit errors. This means that when creating your own `Infallible` (Using `Infallible.create` or one of the methods mentioned in [Creating your first `Observable`](#creating-your-own-observable-aka-observable-sequence)), you will not be allowed to emit errors.
+
+`Infallible` is useful when you want to statically model and guarantee a stream of values that is known to never fail, but don't want to commit to using `MainScheduler` and don't want to implicitly use `share()` to share resources and side-effects, such as the case in [`Driver` and `Signal`](Traits.md#rxcocoa-traits).
 
 ### Life happens
 
@@ -861,7 +876,7 @@ In order to enable debug mode, a `TRACE_RESOURCES` flag must be added to the RxS
 
 For further discussion and instructions on how to set the `TRACE_RESOURCES` flag for Cocoapods & Carthage, see [#378](https://github.com/ReactiveX/RxSwift/issues/378)
 
-## Debugging memory leaks
+### Debugging memory leaks
 
 In debug mode Rx tracks all allocated resources in a global variable `Resources.total`.
 
@@ -1081,20 +1096,12 @@ URLSession.shared.rx.response(myURLRequest)
 ```
 ### Logging HTTP traffic
 
-In debug mode RxCocoa will log all HTTP request to console by default. In case you want to change that behavior, please set `Logging.URLRequests` filter.
+RxCocoa will log all HTTP request info to the console by default when run in debug mode. You may overwrite the `URLSession.rx.shouldLogRequest` closure to define which requests should and shouldn't be logged.
 
 ```swift
-// read your own configuration
-public struct Logging {
-    public typealias LogURLRequest = (URLRequest) -> Bool
-
-    public static var URLRequests: LogURLRequest =  { _ in
-    #if DEBUG
-        return true
-    #else
-        return false
-    #endif
-    }
+URLSession.rx.shouldLogRequest = { request in
+    // Only log requests to reactivex.org     
+    return request.url?.host == "reactivex.org" || request.url?.host == "www.reactivex.org"
 }
 ```
 
