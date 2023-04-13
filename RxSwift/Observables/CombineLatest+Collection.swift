@@ -155,7 +155,7 @@ final private class CombineLatestCollectionTypeSink<Collection: Swift.Collection
             }
 
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            let disposable = (debounceDependencies ? source.observeOn(mainScheduler) : source).subscribe(
+            let disposable = (debounceDependencies ? source.observe(on: mainScheduler) : source).subscribe(
                 AnyObserver { event in
                 self.on(event, atIndex: index)
             })

@@ -90,8 +90,8 @@ final class CombineLatestSink2_<E1, E2, Observer: ObserverType> : CombineLatestS
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))
@@ -216,9 +216,9 @@ final class CombineLatestSink3_<E1, E2, E3, Observer: ObserverType> : CombineLat
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
-            subscription3.setDisposable(self.parent.source3.observeOn(mainScheduler).subscribe(observer3))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(self.parent.source3.observe(on: mainScheduler).subscribe(observer3))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))
@@ -350,10 +350,10 @@ final class CombineLatestSink4_<E1, E2, E3, E4, Observer: ObserverType> : Combin
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
-            subscription3.setDisposable(self.parent.source3.observeOn(mainScheduler).subscribe(observer3))
-            subscription4.setDisposable(self.parent.source4.observeOn(mainScheduler).subscribe(observer4))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(self.parent.source3.observe(on: mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(self.parent.source4.observe(on: mainScheduler).subscribe(observer4))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))
@@ -492,11 +492,11 @@ final class CombineLatestSink5_<E1, E2, E3, E4, E5, Observer: ObserverType> : Co
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
-            subscription3.setDisposable(self.parent.source3.observeOn(mainScheduler).subscribe(observer3))
-            subscription4.setDisposable(self.parent.source4.observeOn(mainScheduler).subscribe(observer4))
-            subscription5.setDisposable(self.parent.source5.observeOn(mainScheduler).subscribe(observer5))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(self.parent.source3.observe(on: mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(self.parent.source4.observe(on: mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(self.parent.source5.observe(on: mainScheduler).subscribe(observer5))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))
@@ -642,12 +642,12 @@ final class CombineLatestSink6_<E1, E2, E3, E4, E5, E6, Observer: ObserverType> 
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
-            subscription3.setDisposable(self.parent.source3.observeOn(mainScheduler).subscribe(observer3))
-            subscription4.setDisposable(self.parent.source4.observeOn(mainScheduler).subscribe(observer4))
-            subscription5.setDisposable(self.parent.source5.observeOn(mainScheduler).subscribe(observer5))
-            subscription6.setDisposable(self.parent.source6.observeOn(mainScheduler).subscribe(observer6))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(self.parent.source3.observe(on: mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(self.parent.source4.observe(on: mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(self.parent.source5.observe(on: mainScheduler).subscribe(observer5))
+            subscription6.setDisposable(self.parent.source6.observe(on: mainScheduler).subscribe(observer6))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))
@@ -800,13 +800,13 @@ final class CombineLatestSink7_<E1, E2, E3, E4, E5, E6, E7, Observer: ObserverTy
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
-            subscription3.setDisposable(self.parent.source3.observeOn(mainScheduler).subscribe(observer3))
-            subscription4.setDisposable(self.parent.source4.observeOn(mainScheduler).subscribe(observer4))
-            subscription5.setDisposable(self.parent.source5.observeOn(mainScheduler).subscribe(observer5))
-            subscription6.setDisposable(self.parent.source6.observeOn(mainScheduler).subscribe(observer6))
-            subscription7.setDisposable(self.parent.source7.observeOn(mainScheduler).subscribe(observer7))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(self.parent.source3.observe(on: mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(self.parent.source4.observe(on: mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(self.parent.source5.observe(on: mainScheduler).subscribe(observer5))
+            subscription6.setDisposable(self.parent.source6.observe(on: mainScheduler).subscribe(observer6))
+            subscription7.setDisposable(self.parent.source7.observe(on: mainScheduler).subscribe(observer7))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))
@@ -966,14 +966,14 @@ final class CombineLatestSink8_<E1, E2, E3, E4, E5, E6, E7, E8, Observer: Observ
             // We avoid using MainScheduler here, as we _always_ want these subscriptions to be dispatched
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
-            subscription1.setDisposable(self.parent.source1.observeOn(mainScheduler).subscribe(observer1))
-            subscription2.setDisposable(self.parent.source2.observeOn(mainScheduler).subscribe(observer2))
-            subscription3.setDisposable(self.parent.source3.observeOn(mainScheduler).subscribe(observer3))
-            subscription4.setDisposable(self.parent.source4.observeOn(mainScheduler).subscribe(observer4))
-            subscription5.setDisposable(self.parent.source5.observeOn(mainScheduler).subscribe(observer5))
-            subscription6.setDisposable(self.parent.source6.observeOn(mainScheduler).subscribe(observer6))
-            subscription7.setDisposable(self.parent.source7.observeOn(mainScheduler).subscribe(observer7))
-            subscription8.setDisposable(self.parent.source8.observeOn(mainScheduler).subscribe(observer8))
+            subscription1.setDisposable(self.parent.source1.observe(on: mainScheduler).subscribe(observer1))
+            subscription2.setDisposable(self.parent.source2.observe(on: mainScheduler).subscribe(observer2))
+            subscription3.setDisposable(self.parent.source3.observe(on: mainScheduler).subscribe(observer3))
+            subscription4.setDisposable(self.parent.source4.observe(on: mainScheduler).subscribe(observer4))
+            subscription5.setDisposable(self.parent.source5.observe(on: mainScheduler).subscribe(observer5))
+            subscription6.setDisposable(self.parent.source6.observe(on: mainScheduler).subscribe(observer6))
+            subscription7.setDisposable(self.parent.source7.observe(on: mainScheduler).subscribe(observer7))
+            subscription8.setDisposable(self.parent.source8.observe(on: mainScheduler).subscribe(observer8))
         } else {
          subscription1.setDisposable(self.parent.source1.subscribe(observer1))
          subscription2.setDisposable(self.parent.source2.subscribe(observer2))

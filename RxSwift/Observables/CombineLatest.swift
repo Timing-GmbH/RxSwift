@@ -91,13 +91,13 @@ class CombineLatestSink<Observer: ObserverType>
     }
     
     func erase(_ index: Int) {
-        if _isDone[index] {
+		if self.isDone[index] {
             return
         }
         
-        if _hasValue[index] {
-            _hasValue[index] = false
-            _numberOfValues -= 1
+		if self.hasValue[index] {
+			self.hasValue[index] = false
+			self.numberOfValues -= 1
         }
     }
 }
@@ -163,7 +163,7 @@ class CombineLatestEraseObserver
         synchronizedOn(event)
     }
     
-    func _synchronized_on(_ event: Event<Any>) {
+    func synchronized_on(_ event: Event<Any>) {
         switch event {
         case .next(_):
             self.parent.erase(self.index)

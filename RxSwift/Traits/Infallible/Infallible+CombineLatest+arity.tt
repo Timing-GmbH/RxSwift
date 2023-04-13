@@ -19,10 +19,11 @@ extension Infallible {
     - returns: An observable sequence containing the result of combining elements of the sources using the specified result selector function.
     */
     public static func combineLatest<<%= (Array(1...i).map { "I\($0): InfallibleType" }).joined(separator: ", ") %>>
-        (<%= (Array(1...i).map { "_ source\($0): I\($0)" }).joined(separator: ", ") %>, resultSelector: @escaping (<%= (Array(1...i).map { "I\($0).Element" }).joined(separator: ", ") %>) throws -> Element)
+        (<%= (Array(1...i).map { "_ source\($0): I\($0)" }).joined(separator: ", ") %>, debounceDependencies: Bool = false, resultSelector: @escaping (<%= (Array(1...i).map { "I\($0).Element" }).joined(separator: ", ") %>) throws -> Element)
             -> Infallible<Element> {
         Infallible(CombineLatest<%= i %>(
             <%= (Array(1...i).map { "source\($0): source\($0).asObservable()" }).joined(separator: ", ") %>,
+            debounceDependencies: debounceDependencies,
             resultSelector: resultSelector
         ))
     }

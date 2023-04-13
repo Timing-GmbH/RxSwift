@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol ObservableUsable: class {
+public protocol ObservableUsable: AnyObject {
     func subscribeAny(_ on: @escaping (Event<Any>) -> Void) -> Disposable
 }
 

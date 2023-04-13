@@ -93,7 +93,7 @@ final class CombineLatestSink<%= i %>_<<%= (Array(1...i).map { "E\($0)" }).joine
             // asynchronously rather than run directly.
             let mainScheduler = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.main)
 <%= (Array(1...i).map {
-"            subscription\($0).setDisposable(self.parent.source\($0).observeOn(mainScheduler).subscribe(observer\($0)))"
+"            subscription\($0).setDisposable(self.parent.source\($0).observe(on: mainScheduler).subscribe(observer\($0)))"
 }).joined(separator: "\n") %>
         } else {
 <%= (Array(1...i).map {
